@@ -4,60 +4,71 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
-contract DogeLottery is ERC721, Ownable {
+contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     using Counters for Counters.Counter;
 
     uint8 public constant MAX_CHOICES = 5;
     uint8 public constant PRIZE_RATIO = 2;
     uint256 public constant TICKET_PRICE_IN_CENTS = 10;
+    uint8 public constant MIN_REQUEST_CONFIRMATIONS_TO_GET_RANDOM_WORDS = 3;
+    uint32 public constant CALLBACK_GAS_LIMIT_TO_GET_RANDOM_WORDS = 100000;
+    uint32 public constant NUMBER_OF_RANDOM_WORDS = 1;
 
-    mapping(uint256 => uint8) private _winChoices;
-    mapping(uint256 => uint256) private _ticketPrizes;
+    mapping(uint256 => uint8) private _choices;
+    mapping(uint256 => uint256) private _requestToTicket;
     mapping(address => uint256) private _winnings;
+    mapping(uint256 => uint256) private _ticketPrices;
+
     Counters.Counter private _ticketIdCounter;
+    VRFCoordinatorV2Interface private immutable _vrfCoordinator;
+    uint64 private immutable _subscriptionId;
+    bytes32 private immutable _gasLaneHash;
+    uint256 private _newTicketPrice;
 
-    constructor() ERC721("DogeLotteryTicket", "DLT") {}
+    constructor(
+        uint64 subscriptionId,
+        address vrfCoordinatorAddress,
+        bytes32 vrfGasLaneHash,
+        uint256 newTicketPrice
+    )
+        ERC721("DogeLotteryTicket", "DLT")
+        VRFConsumerBaseV2(vrfCoordinatorAddress)
+    {
+        _vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorAddress);
+        _subscriptionId = subscriptionId;
+        _gasLaneHash = vrfGasLaneHash;
+        _newTicketPrice = newTicketPrice;
+   }
 
-    function getPriceOfTicket() public pure returns (uint256) {
-        uint256 cryptoInUsd = 1; // TODO: fetch usd price by oracle
-        uint256 price = (TICKET_PRICE_IN_CENTS / 100) * cryptoInUsd; // fetch usd
+    function getNewTicketPrice() public view returns (uint256) {
+        return _newTicketPrice;
+    }
 
-        return price;
+    function setNewTicketPrice(uint256 newTicketPrice) public onlyOwner {
+        require(newTicketPrice > 0, 'Price of ticket should be non nullable');
+
+        _newTicketPrice = newTicketPrice;
+    }
+
+    function getTicketPrice(uint256 ticketId) public view returns (uint256) {
+        return _ticketPrices[ticketId];
     }
 
     function buyTicket() public payable returns (uint256) {
-        uint256 priceOfTicket = getPriceOfTicket();
+        uint256 ticketPrice = getNewTicketPrice();
 
-        require(msg.value < priceOfTicket, "Not enough money to buy a ticket");
-
-        uint256 id = _ticketIdCounter.current();
-        _ticketPrizes[id] = priceOfTicket * PRIZE_RATIO;
-        _safeMint(msg.sender, id);
+        require(msg.value == ticketPrice, "You should set exact price");
 
         _ticketIdCounter.increment();
+        uint256 id = _ticketIdCounter.current();
+        _ticketPrices[id] = ticketPrice;
+
+        _safeMint(msg.sender, id);
 
         return id;
-    }
-
-    function _getRandomChoice() private pure returns (uint8) {
-        uint8 winChoice = 1; /* TODO: get a random number from 1 to 5 */
-
-        return winChoice;
-    }
-
-    function _checkWinChoice(
-        uint256 ticketId,
-        uint8 choice
-    ) private returns (bool) {
-        uint8 randomChoice = _getRandomChoice();
-        _winChoices[ticketId] = randomChoice;
-
-        return randomChoice == choice;
-    }
-
-    function isTicketOpened(uint256 ticketId) public view returns (bool) {
-        return _winChoices[ticketId] != 0;
     }
 
     function _sendMoney(
@@ -71,11 +82,11 @@ contract DogeLottery is ERC721, Ownable {
 
     function openTicket(uint256 ticketId, uint8 choice) public {
         require(_exists(ticketId), "Ticket should exist");
-        require(!isTicketOpened(ticketId), "Ticket has already opened");
         require(
             0 < choice && choice <= MAX_CHOICES,
             "You should choose from 1 to 5"
         );
+        require(_choices[ticketId] == 0, "Ticket has already been opened");
 
         address ownerOfTicket = _ownerOf(ticketId);
 
@@ -84,10 +95,31 @@ contract DogeLottery is ERC721, Ownable {
             "You should be an owner of a ticket"
         );
 
-        bool win = _checkWinChoice(ticketId, choice);
+        _choices[ticketId] = choice;
+        uint256 requestId = _vrfCoordinator.requestRandomWords(
+            _gasLaneHash,
+            _subscriptionId,
+            MIN_REQUEST_CONFIRMATIONS_TO_GET_RANDOM_WORDS,
+            CALLBACK_GAS_LIMIT_TO_GET_RANDOM_WORDS,
+            NUMBER_OF_RANDOM_WORDS
+        );
+        _requestToTicket[requestId] = ticketId;
+    }
 
-        if (win) {
-            uint256 prize = _ticketPrizes[ticketId];
+    function fulfillRandomWords(
+        uint256 requestId,
+        uint256[] memory randomWords
+    ) internal override {
+        uint256 ticketId = _requestToTicket[requestId];
+        require(ticketId != 0, "Request should exist");
+        delete _requestToTicket[requestId];
+
+        uint256 choice = _choices[ticketId];
+        uint256 winChoice = randomWords[0] % MAX_CHOICES;
+
+        if (choice == winChoice) {
+            address ownerOfTicket = _ownerOf(ticketId);
+            uint256 prize = _ticketPrices[ticketId] * PRIZE_RATIO;
 
             _winnings[ownerOfTicket] += prize;
         }
