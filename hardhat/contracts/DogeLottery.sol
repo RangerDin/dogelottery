@@ -2,6 +2,8 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
@@ -9,6 +11,7 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
 contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     using Counters for Counters.Counter;
+    using Strings for uint256;
 
     uint8 public constant MAX_CHOICES = 5;
     uint8 public constant PRIZE_RATIO = 2;
@@ -41,14 +44,14 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         _subscriptionId = subscriptionId;
         _gasLaneHash = vrfGasLaneHash;
         _newTicketPrice = newTicketPrice;
-   }
+    }
 
     function getNewTicketPrice() public view returns (uint256) {
         return _newTicketPrice;
     }
 
     function setNewTicketPrice(uint256 newTicketPrice) public onlyOwner {
-        require(newTicketPrice > 0, 'Price of ticket should be non nullable');
+        require(newTicketPrice > 0, "Price of ticket should be non nullable");
 
         _newTicketPrice = newTicketPrice;
     }
@@ -144,10 +147,44 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
 
     receive() external payable {}
 
-    function tokenURL(uint256 tokenId) public view returns (string memory) {
-        /* TODO: return svg url */
-        _requireMinted(tokenId);
+    function tokenURI(
+        uint256 ticketId
+    ) public view override returns (string memory) {
+        _requireMinted(ticketId);
 
-        return "";
+        return
+            string(
+                abi.encodePacked(
+                    "data:application/json;base64,",
+                    Base64.encode(
+                        _getTicketMetadata(ticketId)
+                    )
+                )
+            );
+    }
+
+    function _getTicketMetadata(
+        uint256 ticketId
+    ) public view returns (bytes memory) {
+        /* TODO: add description */
+        return abi.encodePacked(
+            '{',
+                '"name":"Doge Lottery ticket #"', ticketId.toString(), '"',
+                '"image":"', _getTicketImageDataURL(ticketId), '"'
+            '}'
+        );
+    }
+
+    function _getTicketImageDataURL(uint256 ticketId) public view returns (bytes memory) {
+        return abi.encodePacked("data:image/svg+xml;base64,", Base64.encode(getTicketImage(ticketId)));
+    }
+
+    function getTicketImage(uint256 ticketId) public view returns (bytes memory) {
+        /* TODO: return real ticket svg with generated background */
+        return abi.encodePacked(
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<svg>',
+            '</svg>'
+        );
     }
 }
