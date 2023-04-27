@@ -21,21 +21,25 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     uint32 public constant NUMBER_OF_RANDOM_WORDS = 1;
 
     mapping(uint256 => uint8) private _choices;
+    mapping(uint256 => uint8) private _winChoices;
     mapping(uint256 => uint256) private _requestToTicket;
     mapping(address => uint256) private _winnings;
     mapping(uint256 => uint256) private _ticketPrices;
 
-    Counters.Counter private _ticketIdCounter;
     VRFCoordinatorV2Interface private immutable _vrfCoordinator;
     uint64 private immutable _subscriptionId;
     bytes32 private immutable _gasLaneHash;
+
+    Counters.Counter private _ticketIdCounter;
     uint256 private _newTicketPrice;
+    string private _baseURL;
 
     constructor(
         uint64 subscriptionId,
         address vrfCoordinatorAddress,
         bytes32 vrfGasLaneHash,
-        uint256 newTicketPrice
+        uint256 newTicketPrice,
+        string memory baseURL
     )
         ERC721("DogeLotteryTicket", "DLT")
         VRFConsumerBaseV2(vrfCoordinatorAddress)
@@ -44,6 +48,11 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         _subscriptionId = subscriptionId;
         _gasLaneHash = vrfGasLaneHash;
         _newTicketPrice = newTicketPrice;
+        _baseURL = baseURL;
+    }
+
+    function setBaseUrl(string memory newBaseURL) public onlyOwner {
+        _baseURL = newBaseURL;
     }
 
     function getNewTicketPrice() public view returns (uint256) {
@@ -118,7 +127,8 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         delete _requestToTicket[requestId];
 
         uint256 choice = _choices[ticketId];
-        uint256 winChoice = randomWords[0] % MAX_CHOICES;
+        uint8 winChoice = uint8(randomWords[0] % MAX_CHOICES);
+        _winChoices[ticketId] = winChoice;
 
         if (choice == winChoice) {
             address ownerOfTicket = _ownerOf(ticketId);
@@ -166,16 +176,39 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     function _getTicketMetadata(
         uint256 ticketId
     ) public view returns (bytes memory) {
-        /* TODO: add description */
         return abi.encodePacked(
             '{',
-                '"name":"Doge Lottery ticket #"', ticketId.toString(), '"',
+                '"name":"Doge Lottery Ticket #"', ticketId.toString(), '"',
+                '"description":"', _getTicketDescription(ticketId), '"',
+                '"external_url":"', _getTicketExternalUrl(ticketId), '"',
                 '"image":"', _getTicketImageDataURL(ticketId), '"'
             '}'
         );
     }
 
-    function _getTicketImageDataURL(uint256 ticketId) public view returns (bytes memory) {
+    function _getTicketDescription(uint256 ticketId) private view returns (string memory) {
+        uint8 choice = _choices[ticketId];
+
+        if (choice == 0) {
+            return string(abi.encodePacked('New Doge Lottery Ticket #', ticketId.toString()));
+        }
+
+        if (choice == _winChoices[ticketId]) {
+            return string(abi.encodePacked('Scratched off Doge Lottery Ticket #', ticketId.toString()));
+        }
+
+        return string(abi.encodePacked('Scratched off winning Doge Lottery Ticket #', ticketId.toString()));
+    }
+
+
+    function _getTicketExternalUrl(uint256 ticketId) private view returns (string memory) {
+        return string(abi.encodePacked(
+            _baseURL,
+            ticketId.toString()
+        ));
+    }
+
+    function _getTicketImageDataURL(uint256 ticketId) private view returns (bytes memory) {
         return abi.encodePacked("data:image/svg+xml;base64,", Base64.encode(getTicketImage(ticketId)));
     }
 
