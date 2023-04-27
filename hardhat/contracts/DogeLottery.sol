@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
@@ -25,6 +26,14 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     mapping(uint256 => uint256) private _requestToTicket;
     mapping(address => uint256) private _winnings;
     mapping(uint256 => uint256) private _ticketPrices;
+
+    int8[2][5] private coordinates = [
+        [int8(-30), -15],
+        [int8(30), -15],
+        [int8(0), 0],
+        [int8(-30), 15],
+        [int8(30), 15]
+    ];
 
     VRFCoordinatorV2Interface private immutable _vrfCoordinator;
     uint64 private immutable _subscriptionId;
@@ -213,11 +222,70 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     }
 
     function getTicketImage(uint256 ticketId) public view returns (bytes memory) {
-        /* TODO: return real ticket svg with generated background */
+        /* TODO: return real ticket svg and optimize */
         return abi.encodePacked(
-            '<?xml version="1.0" encoding="UTF-8"?>',
-            '<svg>',
+            '<svg width="100mm" height="120mm" version="1.1" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">',
+                '<defs>',
+                    '<circle id="a" cx="50" cy="90" r="8" />',
+                '</defs>',
+                '<path width="100" height="120" d="m5 0h89.218a5.7821 6.0001 0 0 1 5.7821 6.0001v108.81a5 5.1885 0 0 1-5 5.1885h-89.218a5.7821 6.0001 0 0 1-5.7821-6.0001v-108.81a5 5.1885 0 0 1 5-5.1885z" />',
+                '<g fill="#ccc">',
+                    _getTicketImageSlots(ticketId),
+                '</g>',
+                _getTicketImageTitle(ticketId),
+                _getTicketImageBone(ticketId),
             '</svg>'
         );
+    }
+
+
+    function _getTicketImageSlots(uint256 ticketId) private view returns (bytes memory) {
+        bytes memory slots;
+        uint8 slotIndex = _winChoices[ticketId] - 1;
+
+        for (uint8 i = 0; i < MAX_CHOICES; i++) {
+            slots = abi.encodePacked(
+                slots,
+                _getTicketImageSlot(coordinates[i][0], coordinates[i][1], slotIndex == i)
+            );
+        }
+
+        return slots;
+    }
+
+    function _getTicketImageSlot(int256 x, int256 y, bool scrachedOff) private pure returns (bytes memory) {
+        return abi.encodePacked(
+            '<use x="', int256ToString(x), '" y="', int256ToString(y), '" xlink:href="#a"', scrachedOff ? ' fill="#fff"' : '' ,' />'
+        );
+    }
+
+    function _getTicketImageTitle(uint256 ticketId) private pure returns (bytes memory) {
+        return abi.encodePacked(
+            '<text x="10" y="15" fill="#fff" font-family="sans-serif" font-size="8px" stroke-width=".5" style="line-height:1.25" xml:space="preserve">Ticket #',
+                ticketId.toString(),
+            '</text>'
+        );
+    }
+
+    function _getTicketImageBone(uint256 ticketId) private view returns (string memory) {
+        uint8 winChoice = _winChoices[ticketId];
+
+        if (winChoice == 0) {
+            return '';
+        }
+
+        uint8 slotIndex = winChoice - 1;
+        int8 x = coordinates[slotIndex][0];
+        int8 y = coordinates[slotIndex][1];
+
+        return string(abi.encodePacked(
+            '<g transform="translate(', int256ToString(x), int256ToString(y), ')">',
+                '<path d="m53.887 92.381c-0.61745 9e-3 -1.2074-0.42005-1.3902-1.0096h-4.981c-0.23433 0.79272-1.2065 1.2404-1.96 0.89419-0.78327-0.30496-1.142-1.3383-0.7088-2.0601 0.2954-0.31351-0.28271-0.6522-0.18471-1.0571-0.06532-0.8699 0.77787-1.6517 1.6405-1.5181 0.55269 0.0615 1.0462 0.46857 1.2129 0.99887h4.981c0.23459-0.79239 1.2062-1.2405 1.9597-0.8942 0.73086 0.28829 1.1301 1.2363 0.7415 1.94-0.16903 0.26067-0.33019 0.46362-0.03147 0.6945 0.44658 0.63987 0.01597 1.5659-0.64519 1.8667-0.1969 0.0954-0.41557 0.1451-0.63435 0.1448z" />',
+            '</g>'
+        ));
+    }
+
+    function int256ToString(int256 value) private pure returns (string memory) {
+        return string(abi.encodePacked(value < 0 ? "-" : "", SignedMath.abs(value).toString()));
     }
 }
