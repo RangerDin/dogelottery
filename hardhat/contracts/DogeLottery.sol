@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "hardhat/console.sol";
 
 contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     using Counters for Counters.Counter;
@@ -62,6 +63,10 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
 
     function setBaseUrl(string memory newBaseURL) public onlyOwner {
         _baseURL = newBaseURL;
+    }
+
+    function getBaseUrl() public view returns(string memory) {
+        return _baseURL;
     }
 
     function getNewTicketPrice() public view returns (uint256) {
@@ -127,6 +132,10 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         _requestToTicket[requestId] = ticketId;
     }
 
+    function winnings() public view returns (uint256) {
+        return _winnings[msg.sender];
+    }
+
     function fulfillRandomWords(
         uint256 requestId,
         uint256[] memory randomWords
@@ -139,11 +148,15 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         uint8 winChoice = uint8(randomWords[0] % MAX_CHOICES);
         _winChoices[ticketId] = winChoice;
 
+        uint256 ticketPrice = _ticketPrices[ticketId];
+
         if (choice == winChoice) {
             address ownerOfTicket = _ownerOf(ticketId);
-            uint256 prize = _ticketPrices[ticketId] * PRIZE_RATIO;
+            uint256 prize = ticketPrice * PRIZE_RATIO;
 
             _winnings[ownerOfTicket] += prize;
+        } else {
+            _winnings[owner()] += ticketPrice;
         }
     }
 
@@ -156,12 +169,6 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         bool sent = _sendMoney(msg.sender, senderWinnings);
 
         require(sent, "Error during sending money");
-    }
-
-    function withdrawLeftovers(uint256 value) public onlyOwner {
-        bool sent = _sendMoney(msg.sender, value);
-
-        require(sent, "Error during withdrawing");
     }
 
     receive() external payable {}
@@ -184,7 +191,7 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
 
     function _getTicketMetadata(
         uint256 ticketId
-    ) public view returns (bytes memory) {
+    ) private view returns (bytes memory) {
         return abi.encodePacked(
             '{',
                 '"name":"Doge Lottery Ticket #"', ticketId.toString(), '"',
@@ -255,7 +262,7 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
 
     function _getTicketImageSlot(int256 x, int256 y, bool scrachedOff) private pure returns (bytes memory) {
         return abi.encodePacked(
-            '<use x="', int256ToString(x), '" y="', int256ToString(y), '" xlink:href="#a"', scrachedOff ? ' fill="#fff"' : '' ,' />'
+            '<use x="', _int256ToString(x), '" y="', _int256ToString(y), '" xlink:href="#a"', scrachedOff ? ' fill="#fff"' : '' ,' />'
         );
     }
 
@@ -279,13 +286,13 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         int8 y = coordinates[slotIndex][1];
 
         return string(abi.encodePacked(
-            '<g transform="translate(', int256ToString(x), int256ToString(y), ')">',
+            '<g transform="translate(', _int256ToString(x), _int256ToString(y), ')">',
                 '<path d="m53.887 92.381c-0.61745 9e-3 -1.2074-0.42005-1.3902-1.0096h-4.981c-0.23433 0.79272-1.2065 1.2404-1.96 0.89419-0.78327-0.30496-1.142-1.3383-0.7088-2.0601 0.2954-0.31351-0.28271-0.6522-0.18471-1.0571-0.06532-0.8699 0.77787-1.6517 1.6405-1.5181 0.55269 0.0615 1.0462 0.46857 1.2129 0.99887h4.981c0.23459-0.79239 1.2062-1.2405 1.9597-0.8942 0.73086 0.28829 1.1301 1.2363 0.7415 1.94-0.16903 0.26067-0.33019 0.46362-0.03147 0.6945 0.44658 0.63987 0.01597 1.5659-0.64519 1.8667-0.1969 0.0954-0.41557 0.1451-0.63435 0.1448z" />',
             '</g>'
         ));
     }
 
-    function int256ToString(int256 value) private pure returns (string memory) {
+    function _int256ToString(int256 value) private pure returns (string memory) {
         return string(abi.encodePacked(value < 0 ? "-" : "", SignedMath.abs(value).toString()));
     }
 }
