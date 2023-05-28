@@ -4,7 +4,7 @@ import Identity from "~/user/components/Identity";
 import styles from "./page.module.css";
 import Kiosk from "~/lottery/components/Kiosk";
 import TicketList from "~/lottery/components/TicketList";
-import ConnectButton from "~/web3/ConnectButton";
+import ConnectButton from "~/web3/components/ConnectButton";
 
 import useLotteryPageState from "~/lottery/useLotteryPageState";
 
@@ -15,7 +15,7 @@ const Home = () => {
     <main className={styles.page}>
       <div className={styles.identity}>
         {!state.connected && <ConnectButton />}
-        {state.connected && <Identity />}
+        {state.connected && <Identity address={state.address} />}
       </div>
       <div className={styles.mainContent}>
         <Kiosk className={styles.kiosk} />

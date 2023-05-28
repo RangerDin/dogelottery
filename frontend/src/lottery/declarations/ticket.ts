@@ -1,5 +1,5 @@
 /* TODO: check this color set */
-enum LotteryTicketColor {
+export enum LotteryTicketColor {
   RED = "RED",
   GREEN = "GREEN",
   BLUE = "BLUE",
@@ -9,7 +9,7 @@ enum LotteryTicketColor {
 
 export type LotteryTicketId = string;
 
-enum LotteryTicketStatus {
+export enum LotteryTicketStatus {
   NEW = "NEW",
   OPENED = "OPENED"
 }

@@ -24,20 +24,21 @@ type LotteryPageDisconnectedState = {
 };
 
 type LotteryPageConnectedState = LotteryPageConnectedCommonState &
-  (
-    | LotteryPageOfferingToBuyTicketState
-    | LotteryPagePreparingTicketsState
-    | LotteryPageSelectingTicketState
-    | LotteryPageBuyingTicketState
-    | LotteryPageShowingTicketState
-    | LotteryPageOfferingToSendTicketState
-    | LotteryPageSendingTicketState
-    | LotteryPageOpeningTicketState
-  );
+  MutableLotteryPageState;
+
+export type MutableLotteryPageState =
+  | LotteryPageOfferingToBuyTicketState
+  | LotteryPagePreparingTicketsState
+  | LotteryPageSelectingTicketState
+  | LotteryPageBuyingTicketState
+  | LotteryPageShowingTicketState
+  | LotteryPageOfferingToSendTicketState
+  | LotteryPageSendingTicketState
+  | LotteryPageOpeningTicketState;
 
 type LotteryPageConnectedCommonState = {
   connected: true;
-  address: string;
+  address?: string;
 };
 
 type LotteryPageOfferingToBuyTicketState = {
@@ -50,36 +51,37 @@ type LotteryPagePreparingTicketsState = {
 
 type LotteryPageSelectingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET;
-  tickets: LotteryTicket;
+  tickets: LotteryTicket[];
 };
 
 type LotteryPageBuyingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.BUYING_TICKET;
-  tickets: LotteryTicket;
+  tickets: LotteryTicket[];
   activeTicket: LotteryTicketId;
 };
 
 type LotteryPageShowingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET;
-  tickets: LotteryTicket;
-  activeTicket: LotteryTicketId;
+  tickets: LotteryTicket[];
+  activeTicketId: LotteryTicketId;
+  openSlot: LotteryTicketSlot | null;
 };
 
 type LotteryPageOfferingToSendTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_SEND_TICKET;
-  tickets: LotteryTicket;
-  activeTicket: LotteryTicketId;
+  tickets: LotteryTicket[];
+  activeTicketId: LotteryTicketId;
 };
 
 type LotteryPageSendingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.SENDING_TICKET;
-  tickets: LotteryTicket;
-  activeTicket: LotteryTicketId;
+  tickets: LotteryTicket[];
+  activeTicketId: LotteryTicketId;
 };
 
 type LotteryPageOpeningTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.OPENING_TICKET;
-  tickets: LotteryTicket;
-  activeTicket: LotteryTicketId;
-  slotToOpen: LotteryTicketSlot;
+  tickets: LotteryTicket[];
+  activeTicketId: LotteryTicketId;
+  openSlot: LotteryTicketSlot;
 };
