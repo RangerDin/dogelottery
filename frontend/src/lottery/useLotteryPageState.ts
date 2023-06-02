@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CONNECTED_LOTTERY_PAGE_STATUS,
   LotteryPageState,
@@ -13,7 +13,7 @@ import { buyLotteryTicket } from "~/web3/tickets/buy";
 import { openLotteryTicket } from "~/web3/tickets/open";
 import { generateLotteryTickets } from "~/web3/tickets/generate";
 
-const { useIsActive, useAccount } = hooks;
+const { useIsActive, useIsActivating, useAccount } = hooks;
 
 type UseLotteryPageStateResult = {
   state: LotteryPageState;
@@ -32,24 +32,47 @@ const INITIAL_STATE: MutableLotteryPageState = {
 };
 
 const useLotteryPageState = (): UseLotteryPageStateResult => {
+  const [checkingConnection, setCheckingConnection] = useState(true);
   const [mutableState, setMutableState] =
     useState<MutableLotteryPageState>(INITIAL_STATE);
   const isActive = useIsActive();
+  const isActivating = useIsActivating();
   const address = useAccount();
 
+  useEffect(() => {
+    setCheckingConnection(true);
+    metamask
+      .connectEagerly()
+      .catch(() => {
+        console.debug("Failed to connect eagerly to metamask");
+      })
+      .finally(() => {
+        setCheckingConnection(false);
+      });
+  }, []);
+
   const state: LotteryPageState = useMemo<LotteryPageState>(() => {
+    if (checkingConnection) {
+      return {
+        checkingConnection: true
+      };
+    }
+
     if (!isActive) {
       return {
-        connected: false
+        connected: false,
+        connecting: isActivating,
+        checkingConnection: false
       };
     }
 
     return {
       connected: true,
+      checkingConnection: false,
       address,
       ...mutableState
     };
-  }, [address, isActive, mutableState]);
+  }, [address, checkingConnection, isActivating, isActive, mutableState]);
 
   const prepareNewTickets = async () => {
     setMutableState({

@@ -16,11 +16,18 @@ export enum CONNECTED_LOTTERY_PAGE_STATUS {
 }
 
 export type LotteryPageState =
+  | LotteryPageCheckingConnectionState
   | LotteryPageDisconnectedState
   | LotteryPageConnectedState;
 
+type LotteryPageCheckingConnectionState = {
+  checkingConnection: true;
+};
+
 type LotteryPageDisconnectedState = {
+  checkingConnection: false;
   connected: false;
+  connecting: boolean;
 };
 
 type LotteryPageConnectedState = LotteryPageConnectedCommonState &
@@ -37,6 +44,7 @@ export type MutableLotteryPageState =
   | LotteryPageOpeningTicketState;
 
 type LotteryPageConnectedCommonState = {
+  checkingConnection: false;
   connected: true;
   address?: string;
 };
