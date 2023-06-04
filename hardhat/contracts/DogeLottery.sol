@@ -145,7 +145,7 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         delete _requestToTicket[requestId];
 
         uint256 choice = _choices[ticketId];
-        uint8 winChoice = uint8(randomWords[0] % MAX_CHOICES);
+        uint8 winChoice = uint8(randomWords[0] % MAX_CHOICES + 1);
         _winChoices[ticketId] = winChoice;
 
         uint256 ticketPrice = _ticketPrices[ticketId];
@@ -248,12 +248,12 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
 
     function _getTicketImageSlots(uint256 ticketId) private view returns (bytes memory) {
         bytes memory slots;
-        uint8 slotIndex = _winChoices[ticketId] - 1;
+        uint8 slotIndex = _winChoices[ticketId];
 
         for (uint8 i = 0; i < MAX_CHOICES; i++) {
             slots = abi.encodePacked(
                 slots,
-                _getTicketImageSlot(coordinates[i][0], coordinates[i][1], slotIndex == i)
+                _getTicketImageSlot(coordinates[i][0], coordinates[i][1], slotIndex == i + 1)
             );
         }
 
@@ -294,5 +294,13 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
 
     function _int256ToString(int256 value) private pure returns (string memory) {
         return string(abi.encodePacked(value < 0 ? "-" : "", SignedMath.abs(value).toString()));
+    }
+
+    function getWinChoice(uint256 ticketId) public view returns (uint8) {
+        return _winChoices[ticketId];
+    }
+
+    function getChoice(uint256 ticketId) public view returns (uint8) {
+        return _choices[ticketId];
     }
 }

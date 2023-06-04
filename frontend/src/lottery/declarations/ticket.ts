@@ -1,29 +1,25 @@
-/* TODO: check this color set */
-export enum LotteryTicketColor {
-  RED = "RED",
-  GREEN = "GREEN",
-  BLUE = "BLUE",
-  YELLOW = "YELLOW",
-  ORANGE = "ORANGE"
-}
-
 export type LotteryTicketId = string;
 
 export enum LotteryTicketStatus {
   NEW = "NEW",
+  OPENING = "OPENING",
   OPENED = "OPENED"
 }
 
 export type LotteryTicket = {
   id: LotteryTicketId;
-  color: LotteryTicketColor;
 } & (
   | {
       status: LotteryTicketStatus.NEW;
     }
   | {
+      status: LotteryTicketStatus.OPENING;
+      openedSlot: LotteryTicketSlot;
+    }
+  | {
       status: LotteryTicketStatus.OPENED;
       openedSlot: LotteryTicketSlot;
+      winningSlot: LotteryTicketSlot;
     }
 );
 

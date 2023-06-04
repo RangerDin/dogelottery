@@ -1,13 +1,32 @@
+import type { Web3Provider } from "@ethersproject/providers";
 import {
   LotteryTicket,
-  LotteryTicketColor,
   LotteryTicketStatus
 } from "~/lottery/declarations/ticket";
+import { LotteryContract } from "~/web3/tickets/contract";
+import { switchEthereumChain } from "../utils/switchEthereumChain";
 
-let fakeIdCounter = 1;
+export const buyLotteryTicket = async (
+  provider: Web3Provider
+): Promise<LotteryTicket> => {
+  const signer = provider.getSigner();
 
-export const buyLotteryTicket = (): LotteryTicket => ({
-  id: `fake ${fakeIdCounter++}`,
-  color: LotteryTicketColor.BLUE,
-  status: LotteryTicketStatus.NEW
-});
+  const contract = LotteryContract.connect(signer);
+
+  await switchEthereumChain(provider);
+
+  const ticketPrice = await contract.getNewTicketPrice();
+
+  const buyTransaction = await contract.buyTicket({
+    value: ticketPrice
+  });
+
+  const response = await buyTransaction.wait();
+
+  const ticketId = String(parseInt(response.events[0].args[2]));
+
+  return {
+    id: ticketId,
+    status: LotteryTicketStatus.NEW
+  };
+};

@@ -20,28 +20,42 @@ export type LotteryPageState =
   | LotteryPageDisconnectedState
   | LotteryPageConnectedState;
 
-type LotteryPageCheckingConnectionState = {
+export type LotteryPageCheckingConnectionState = {
   checkingConnection: true;
 };
 
-type LotteryPageDisconnectedState = {
+export type LotteryPageDisconnectedState = {
   checkingConnection: false;
   connected: false;
   connecting: boolean;
 };
 
-type LotteryPageConnectedState = LotteryPageConnectedCommonState &
-  MutableLotteryPageState;
+export type LotteryPageConnectedState = LotteryPageConnectedCommonState &
+  MutableLotteryPageStateWithActiveTicket;
 
 export type MutableLotteryPageState =
-  | LotteryPageOfferingToBuyTicketState
-  | LotteryPagePreparingTicketsState
-  | LotteryPageSelectingTicketState
+  | LotteryPageStateWithoutActiveTicket
+  | MutableLotteryPageStateWithActiveTicketId;
+
+export type MutableLotteryPageStateWithActiveTicketId =
   | LotteryPageBuyingTicketState
   | LotteryPageShowingTicketState
   | LotteryPageOfferingToSendTicketState
   | LotteryPageSendingTicketState
   | LotteryPageOpeningTicketState;
+
+export type MutableLotteryPageStateWithActiveTicket =
+  | LotteryPageStateWithoutActiveTicket
+  | ReplaceActiveIdToActive<LotteryPageBuyingTicketState>
+  | ReplaceActiveIdToActive<LotteryPageShowingTicketState>
+  | ReplaceActiveIdToActive<LotteryPageOfferingToSendTicketState>
+  | ReplaceActiveIdToActive<LotteryPageSendingTicketState>
+  | ReplaceActiveIdToActive<LotteryPageOpeningTicketState>;
+
+export type LotteryPageStateWithoutActiveTicket =
+  | LotteryPageOfferingToBuyTicketState
+  | LotteryPagePreparingTicketsState
+  | LotteryPageSelectingTicketState;
 
 type LotteryPageConnectedCommonState = {
   checkingConnection: false;
@@ -51,28 +65,30 @@ type LotteryPageConnectedCommonState = {
 
 type LotteryPageOfferingToBuyTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET;
+  tickets: LotteryTicket[];
 };
 
 type LotteryPagePreparingTicketsState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.PREPARING_TICKETS;
+  tickets: LotteryTicket[];
 };
 
 type LotteryPageSelectingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET;
   tickets: LotteryTicket[];
+  ticketsToChoose: LotteryTicket[];
 };
 
 type LotteryPageBuyingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.BUYING_TICKET;
   tickets: LotteryTicket[];
-  activeTicket: LotteryTicketId;
+  activeTicketId: LotteryTicketId;
 };
 
 type LotteryPageShowingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET;
   tickets: LotteryTicket[];
   activeTicketId: LotteryTicketId;
-  openSlot: LotteryTicketSlot | null;
 };
 
 type LotteryPageOfferingToSendTicketState = {
@@ -91,5 +107,11 @@ type LotteryPageOpeningTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.OPENING_TICKET;
   tickets: LotteryTicket[];
   activeTicketId: LotteryTicketId;
-  openSlot: LotteryTicketSlot;
+};
+
+type ReplaceActiveIdToActive<State extends { activeTicketId: string }> = Omit<
+  State,
+  "activeTicketId"
+> & {
+  activeTicket: LotteryTicket;
 };

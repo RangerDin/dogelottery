@@ -2,32 +2,31 @@ import { ethers, network } from "hardhat";
 import { BigNumberish, BytesLike } from "ethers";
 
 type DogeLotteryOptions = {
-    subscriptionId: BigNumberish
-    vrfCoordinatorAddress: string,
-    vrfGasLaneHash: BytesLike,
-    newTicketPrice: BigNumberish,
-    baseURL: string,
-}
+  subscriptionId: BigNumberish;
+  vrfCoordinatorAddress: string;
+  vrfGasLaneHash: BytesLike;
+  newTicketPrice: BigNumberish;
+  baseURL: string;
+};
 
 const TEST_CHAIN_ID = 31337;
 
 const OPTIONS_BY_CHAIN_ID: Record<number, DogeLotteryOptions> = {
   [TEST_CHAIN_ID]: {
-    baseURL: 'https://doge.lottery/ticket/',
+    baseURL: "https://doge.lottery/ticket/",
     newTicketPrice: 1_000_000_000_000_000_000n,
-    /* TODO: add subscription id */
-    subscriptionId: '',
-    vrfGasLaneHash: "",
-    vrfCoordinatorAddress: ''
+    subscriptionId: "",
+    vrfGasLaneHash: ethers.utils.formatBytes32String("0x00000012"),
+    vrfCoordinatorAddress: "",
   },
   80001: {
-    baseURL: 'https://doge.lottery/ticket/',
+    baseURL: "https://doge.lottery/ticket/",
     newTicketPrice: 1_000_000_000_000_000_000n,
     /* TODO: add subscription id */
-    subscriptionId: '',
+    subscriptionId: "",
     vrfGasLaneHash: "",
-    vrfCoordinatorAddress: ''
-  }
+    vrfCoordinatorAddress: "",
+  },
 };
 
 async function main() {
@@ -46,14 +45,23 @@ async function main() {
   let subscriptionId: BigNumberish;
   let vrfCoordinatorAddress: string;
 
+  let vrfCoordinator;
   if (chainId === TEST_CHAIN_ID) {
-    const vrfCoordinatorFactory = await ethers.getContractFactory("VRFCoordinatorV2Mock");
-    const vrfCoordinator = await vrfCoordinatorFactory.deploy(0, 0);
+    const vrfCoordinatorFactory = await ethers.getContractFactory(
+      "VRFCoordinatorV2Mock"
+    );
+    vrfCoordinator = await vrfCoordinatorFactory.deploy(0, 0);
     const tx = await vrfCoordinator.createSubscription();
+    const txReceipt = await tx.wait();
 
-    console.log('DATA:', {data: tx.value});
+    subscriptionId = txReceipt.events![0].args![0].toNumber();
+    const subscriptionReserve = ethers.utils.parseEther("7");
 
-    subscriptionId = tx.value;
+    await vrfCoordinator.fundSubscription(
+      subscriptionId,
+      subscriptionReserve
+    );
+
     vrfCoordinatorAddress = vrfCoordinator.address;
   } else {
     subscriptionId = options.subscriptionId;
@@ -62,13 +70,17 @@ async function main() {
 
   const DogeLotteryFactory = await ethers.getContractFactory("DogeLottery");
   const dogeLottery = await DogeLotteryFactory.deploy(
-      subscriptionId,
-      vrfCoordinatorAddress,
-      options.vrfGasLaneHash,
-      // options.newTicketPrice,
-      100n,
-      options.baseURL
+    subscriptionId,
+    vrfCoordinatorAddress,
+    options.vrfGasLaneHash,
+    // options.newTicketPrice,
+    100n,
+    options.baseURL
   );
+
+  if (chainId === TEST_CHAIN_ID && vrfCoordinator) {
+    await vrfCoordinator.addConsumer(subscriptionId, dogeLottery.address);
+  }
 
   await dogeLottery.deployed();
 

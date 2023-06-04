@@ -7,7 +7,10 @@
   },
   "scripts": {
     "compile": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy:localhost": "hardhat run --network localhost scripts/deploy.ts",
+    "fullfill:localhost": "hardhat --network localhost fullfill"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.6.1",

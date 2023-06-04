@@ -1,12 +1,11 @@
 import {
   LotteryTicket,
-  LotteryTicketColor,
   LotteryTicketStatus
 } from "~/lottery/declarations/ticket";
-import { Web3Provider } from "~/web3/declarations";
+
+const TIMEOUT_TO_GENERATE_TICKETS = 300;
 
 export const generateLotteryTickets = async (
-  provider: Web3Provider,
   count: number
 ): Promise<LotteryTicket[]> =>
   new Promise(resolve => {
@@ -15,10 +14,9 @@ export const generateLotteryTickets = async (
         .fill(0)
         .map((_, index) => ({
           id: String(index),
-          color: LotteryTicketColor.GREEN,
           status: LotteryTicketStatus.NEW
         }));
 
       resolve(tickets);
-    }, 300);
+    }, TIMEOUT_TO_GENERATE_TICKETS);
   });
