@@ -1,0 +1,83 @@
+.ticket {
+  box-shadow: 6px 5px 10px 0px rgba(0,0,0,0.3);
+  aspect-ratio: 1.48;
+  border-radius: 3.3%/5%;
+  background: #494c57;
+  width: 400px;
+  padding: 0;
+  border: 1px solid #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ticketContentTitle {
+  position: absolute;
+  color: #ffffff;
+  padding: 0;
+  margin: 0;
+  top: 10px;
+  left: 10px;
+}
+
+.ticketSlotContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 42%;
+  height: 47%;
+}
+
+.ticketSlot {
+  position: absolute;
+  padding: 0;
+  background: #7d7d7d;
+  width: 25%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid #000000;
+  transition: border-color 0.3s, outline 0.3s, background-color 0.2s;
+}
+
+.ticketSlot:hover:not(:disabled) {
+  border-color: #ffff00;
+}
+
+.ticketSlot:focus:not(:disabled) {
+  outline: 1px solid #ffffff;
+}
+
+.ticketSlot:active:not(:disabled) {
+  border-color: #00ff00;
+  outline: 1px solid #00ff00;
+}
+
+.ticketSlot:nth-child(1) {
+  bottom: 33%;
+  left: 0;
+}
+
+.ticketSlot:nth-child(2) {
+  top: 0;
+  left: 21%;
+}
+
+.ticketSlot:nth-child(3) {
+  top: 0;
+  right: 21%;
+}
+
+.ticketSlot:nth-child(4) {
+  bottom: 33%;
+  right: 0;
+}
+
+.ticketSlot:nth-child(5) {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 53%;
+  width: 49%;
+}

@@ -1,3 +1,4 @@
+import styles from "./styles.module.css";
 import {
   LotteryTicketSlot,
   LotteryTicketStatus
@@ -21,8 +22,8 @@ const TicketSlot = ({
   onClick
 }: Props): JSX.Element => {
   return (
-    <button disabled={disabled} onClick={onClick}>
-      Slot #{slot} {winning && " (winning)"}
+    <button className={styles.ticketSlot} disabled={disabled} onClick={onClick}>
+      {winning && <span>winning</span>}
     </button>
   );
 };
