@@ -1,1 +1,2 @@
 export const LOTTERY_TICKET_SLOTS = 5;
+export const LOTTERY_TICKETS_TO_GENERATE = 5;

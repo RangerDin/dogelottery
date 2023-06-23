@@ -1,0 +1,27 @@
+.ticketDialogContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ticketDialogActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.ticketDialogButton {
+  border: 0;
+  flex: 1;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  padding: 20px 30px;
+  background: #76b176;
+}
+
+.ticketDialogAddress {
+  border: 1px solid #333333;
+  padding: 20px;
+}

@@ -1,8 +1,6 @@
-import {
-  LotteryTicket,
-  LotteryTicketId,
-  LotteryTicketSlot
-} from "~/lottery/declarations/ticket";
+import { SpecificTicketSelectorDialogProps } from "~/lottery/components/TicketSelectorDialog/TicketSelectorDialog";
+import { LotteryTicket, LotteryTicketId } from "~/lottery/declarations/ticket";
+import { UseDialogHookResult } from "~/ui/Dialog/useDialog";
 
 export enum CONNECTED_LOTTERY_PAGE_STATUS {
   OFFERING_TO_BUY_TICKET = "OFFERING_TO_BUY_TICKET",
@@ -11,6 +9,7 @@ export enum CONNECTED_LOTTERY_PAGE_STATUS {
   SHOWING_TICKET = "SHOWING_TICKET",
   OFFERING_TO_SEND_TICKET = "OFFERING_TO_SEND_TICKET",
   SENDING_TICKET = "SENDING_TICKET",
+  OFFERING_TO_OPEN_TICKET = "OFFERING_TO_OPEN_TICKET",
   OPENING_TICKET = "OPENING_TICKET",
   BUYING_TICKET = "BUYING_TICKET"
 }
@@ -42,6 +41,7 @@ export type MutableLotteryPageStateWithActiveTicketId =
   | LotteryPageShowingTicketState
   | LotteryPageOfferingToSendTicketState
   | LotteryPageSendingTicketState
+  | LotteryPageOfferingToOpenTicketState
   | LotteryPageOpeningTicketState;
 
 export type MutableLotteryPageStateWithActiveTicket =
@@ -50,6 +50,7 @@ export type MutableLotteryPageStateWithActiveTicket =
   | ReplaceActiveIdToActive<LotteryPageShowingTicketState>
   | ReplaceActiveIdToActive<LotteryPageOfferingToSendTicketState>
   | ReplaceActiveIdToActive<LotteryPageSendingTicketState>
+  | ReplaceActiveIdToActive<LotteryPageOfferingToOpenTicketState>
   | ReplaceActiveIdToActive<LotteryPageOpeningTicketState>;
 
 export type LotteryPageStateWithoutActiveTicket =
@@ -61,6 +62,7 @@ type LotteryPageConnectedCommonState = {
   checkingConnection: false;
   connected: true;
   address?: string;
+  ticketSelectionDialog: UseDialogHookResult<SpecificTicketSelectorDialogProps>;
 };
 
 type LotteryPageOfferingToBuyTicketState = {
@@ -73,7 +75,7 @@ type LotteryPagePreparingTicketsState = {
   tickets: LotteryTicket[];
 };
 
-type LotteryPageSelectingTicketState = {
+export type LotteryPageSelectingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET;
   tickets: LotteryTicket[];
   ticketsToChoose: LotteryTicket[];
@@ -99,6 +101,12 @@ type LotteryPageOfferingToSendTicketState = {
 
 type LotteryPageSendingTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.SENDING_TICKET;
+  tickets: LotteryTicket[];
+  activeTicketId: LotteryTicketId;
+};
+
+type LotteryPageOfferingToOpenTicketState = {
+  status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_OPEN_TICKET;
   tickets: LotteryTicket[];
   activeTicketId: LotteryTicketId;
 };

@@ -15,15 +15,21 @@ import { buyLotteryTicket } from "~/web3/tickets/buy";
 import { openLotteryTicket } from "~/web3/tickets/open";
 import { generateLotteryTickets } from "~/web3/tickets/generate";
 import { sendLotteryTicket } from "~/web3/tickets/send";
+import { LOTTERY_TICKETS_TO_GENERATE } from "~/lottery/constants";
+import useDialog from "~/ui/Dialog/useDialog";
+import { SpecificTicketSelectorDialogProps } from "~/lottery/components/TicketSelectorDialog/TicketSelectorDialog";
 
 const { useIsActive, useIsActivating, useAccount, useProvider } = hooks;
 
 export type LotteryPageHandlers = {
   closeTicket: () => void;
   cancelSendingTicket: () => void;
+  cancelOpeningTicket: () => void;
+  cancelTicketsSelection: () => void;
   prepareNewTickets: () => void;
   selectTicket: (ticketId: LotteryTicketId) => void;
   buyAndSelectNewTicket: (ticketId: LotteryTicketId) => void;
+  offerToOpenTicket: (ticketId: LotteryTicketId) => void;
   offerToSendTicket: (ticketId: LotteryTicketId) => void;
   sendTicket: (ticketId: LotteryTicketId, newOwnerAddress: string) => void;
   openTicket: (
@@ -46,6 +52,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   const [checkingConnection, setCheckingConnection] = useState(true);
   const [mutableState, setMutableState] =
     useState<MutableLotteryPageState>(INITIAL_STATE);
+  const ticketSelectionDialog = useDialog<SpecificTicketSelectorDialogProps>();
   const isActive = useIsActive();
   const isActivating = useIsActivating();
   const address = useAccount();
@@ -88,6 +95,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
         connected: true,
         checkingConnection: false,
         address,
+        ticketSelectionDialog,
         ...mutableState
       };
     }
@@ -104,10 +112,18 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       connected: true,
       checkingConnection: false,
       address,
+      ticketSelectionDialog,
       ...mutableState,
       activeTicket
     };
-  }, [address, checkingConnection, isActivating, isActive, mutableState]);
+  }, [
+    address,
+    checkingConnection,
+    isActivating,
+    isActive,
+    mutableState,
+    ticketSelectionDialog
+  ]);
 
   const closeTicket = () => {
     setMutableState(state => ({
@@ -131,13 +147,42 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     });
   };
 
+  const cancelOpeningTicket = () => {
+    setMutableState(state => {
+      if (
+        state.status === CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_OPEN_TICKET
+      ) {
+        return {
+          ...state,
+          status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET
+        };
+      }
+
+      return state;
+    });
+  };
+
+  const cancelTicketsSelection = () => {
+    ticketSelectionDialog.dialogProps.onClose();
+    setMutableState(state => ({
+      ...state,
+      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
+    }));
+  };
+
   const prepareNewTickets = async () => {
     setMutableState(state => ({
       ...state,
       status: CONNECTED_LOTTERY_PAGE_STATUS.PREPARING_TICKETS
     }));
 
-    const ticketsToChoose = await generateLotteryTickets(10);
+    const ticketsToChoose = await generateLotteryTickets(
+      LOTTERY_TICKETS_TO_GENERATE
+    );
+
+    ticketSelectionDialog.openDialog({
+      ticketsToChoose
+    });
 
     setMutableState(state => ({
       ...state,
@@ -183,6 +228,14 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       tickets: [...state.tickets, activeTicket],
       activeTicketId: activeTicket.id,
       openSlot: null
+    }));
+  };
+
+  const offerToOpenTicket = async (activeTicketId: LotteryTicketId) => {
+    setMutableState(state => ({
+      ...state,
+      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_OPEN_TICKET,
+      activeTicketId
     }));
   };
 
@@ -298,9 +351,12 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     handlers: {
       closeTicket,
       cancelSendingTicket,
+      cancelOpeningTicket,
       prepareNewTickets,
+      cancelTicketsSelection,
       selectTicket,
       buyAndSelectNewTicket,
+      offerToOpenTicket,
       offerToSendTicket,
       sendTicket,
       openTicket

@@ -12,7 +12,7 @@ type Props = {
   ticket: LotteryTicket;
   disabled?: boolean;
   className?: string;
-  onClickSlot: (slot: LotteryTicketSlot) => void;
+  onClickSlot?: (slot: LotteryTicketSlot) => void;
 };
 
 const Ticket = ({
@@ -22,7 +22,7 @@ const Ticket = ({
   onClickSlot
 }: Props): JSX.Element => {
   const handleClickSlot = (slotId: LotteryTicketSlot) => () => {
-    onClickSlot(slotId);
+    onClickSlot?.(slotId);
   };
 
   return (

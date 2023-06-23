@@ -1,0 +1,55 @@
+.dialog {
+  background: rgba(0,0,0,0.2);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+.dialogOpened {
+  opacity: 1;
+}
+
+.dialogCloseButton {
+  padding: 0;
+  border: 0;
+  position: absolute;
+  top: 20px;
+  right: 50px;
+}
+
+
+.dialogCloseButton::after,
+.dialogCloseButton::before {
+  content: '';
+  background: #645555;
+  display: block;
+  position: absolute;
+  height: 40px;
+  width: 5px;
+}
+
+
+.dialogCloseButton::after {
+  transform: rotate(45deg);
+}
+
+.dialogCloseButton::before {
+  transform: rotate(135deg);
+}
+
+.dialogContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 70px;
+  height: 100%;
+  width: 100%;
+}

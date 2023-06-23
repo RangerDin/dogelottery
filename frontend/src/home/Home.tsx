@@ -22,13 +22,6 @@ export const Home = () => {
       </div>
       <div className={styles.mainContent}>
         <Kiosk className={styles.kiosk} state={state} handlers={handlers} />
-        {!state.checkingConnection && state.connected && (
-          <TicketList
-            className={styles.ticketList}
-            tickets={state.tickets}
-            onClickTicket={handlers.selectTicket}
-          />
-        )}
         {!state.checkingConnection &&
           state.connected &&
           (state.status === CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET ||
@@ -36,23 +29,13 @@ export const Home = () => {
             state.status === CONNECTED_LOTTERY_PAGE_STATUS.OPENING_TICKET ||
             state.status ===
               CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_SEND_TICKET ||
-            state.status === CONNECTED_LOTTERY_PAGE_STATUS.BUYING_TICKET) && (
+            state.status ===
+              CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_OPEN_TICKET) && (
             <TicketDialog
               open
               ticket={state.activeTicket}
-              sendTicketView={
-                state.status ===
-                  CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_SEND_TICKET ||
-                state.status === CONNECTED_LOTTERY_PAGE_STATUS.SENDING_TICKET
-              }
-              sendingTicket={
-                state.status === CONNECTED_LOTTERY_PAGE_STATUS.SENDING_TICKET
-              }
-              onClose={handlers.closeTicket}
-              onClickCancel={handlers.cancelSendingTicket}
-              onClickOpenSendTicketView={handlers.offerToSendTicket}
-              onClickSendTicket={handlers.sendTicket}
-              onClickTicketSlot={handlers.openTicket}
+              status={state.status}
+              handlers={handlers}
             />
           )}
       </div>
