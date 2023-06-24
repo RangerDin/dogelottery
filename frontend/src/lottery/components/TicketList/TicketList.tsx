@@ -16,16 +16,13 @@ const TicketList = ({
   };
 
   return (
-    <section>
-      <h3>Tickets:</h3>
-      <ul className={className}>
-        {tickets.map(({ id }) => (
-          <li key={id}>
-            <button onClick={handleClickLotteryTicket(id)}>Ticket #{id}</button>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <ul className={className}>
+      {tickets.map(({ id }) => (
+        <li key={id}>
+          <button onClick={handleClickLotteryTicket(id)}>Ticket #{id}</button>
+        </li>
+      ))}
+    </ul>
   );
 };
 
