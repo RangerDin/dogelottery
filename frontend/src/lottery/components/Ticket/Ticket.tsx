@@ -12,6 +12,7 @@ type Props = {
   ticket: LotteryTicket;
   disabled?: boolean;
   className?: string;
+  onClick?: () => void;
   onClickSlot?: (slot: LotteryTicketSlot) => void;
 };
 
@@ -19,6 +20,7 @@ const Ticket = ({
   ticket,
   disabled,
   className,
+  onClick,
   onClickSlot
 }: Props): JSX.Element => {
   const handleClickSlot = (slotId: LotteryTicketSlot) => () => {
@@ -26,8 +28,11 @@ const Ticket = ({
   };
 
   return (
-    <article className={`${className} ${styles.ticket}`}>
-      <h3 className={styles.ticketContentTitle}>#{ticket.id}</h3>
+    <article
+      className={`${className} ${styles.ticket} ${disabled && styles.disabled}`}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+    >
       <div className={styles.ticketSlotContainer}>
         {new Array(LOTTERY_TICKET_SLOTS).fill(null).map((_, index) => (
           <TicketSlot

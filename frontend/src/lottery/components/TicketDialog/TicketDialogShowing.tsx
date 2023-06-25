@@ -23,7 +23,7 @@ const TicketDialogShowing = ({
 
   return (
     <>
-      <Ticket disabled ticket={ticket} />
+      <Ticket className={styles.ticketDialogTicket} ticket={ticket} disabled />
       <div className={styles.ticketDialogActions}>
         <TicketDialogButton onClick={handleClickOpenTicketViewForOpening}>
           Open ticket

@@ -5,6 +5,7 @@ import {
   LotteryTicketSlot
 } from "~/lottery/declarations/ticket";
 import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
+import styles from "./styles.module.css";
 
 type Props = {
   ticket: LotteryTicket;
@@ -23,7 +24,11 @@ const TicketDialogOpening = ({
 
   return (
     <>
-      <Ticket ticket={ticket} onClickSlot={handleClickSlot} />
+      <Ticket
+        className={styles.ticketDialogTicket}
+        ticket={ticket}
+        onClickSlot={handleClickSlot}
+      />
       <TicketDialogButton disabled={opening} onClick={cancelOpeningTicket}>
         Cancel
       </TicketDialogButton>

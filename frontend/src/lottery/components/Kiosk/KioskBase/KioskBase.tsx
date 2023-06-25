@@ -18,8 +18,8 @@ const KioskBase = ({
       <div className={styles.frame}>
         <div className={styles.window}>{windowSlot}</div>
         <section className={styles.ticketsBoard}>
-          <h3 className={styles.ticketBoardTitle}>Tickets</h3>
-          {ticketBoardSlot}
+          <h3 className={styles.ticketsBoardTitle}>Tickets</h3>
+          <div className={styles.ticketsBoardContent}>{ticketBoardSlot}</div>
         </section>
         <div className={styles.actions}>{actionsSlot}</div>
         <div className={styles.door} />

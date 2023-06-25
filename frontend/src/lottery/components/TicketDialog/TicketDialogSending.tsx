@@ -31,7 +31,7 @@ const TicketDialogSending = ({
 
   return (
     <>
-      <Ticket disabled ticket={ticket} />
+      <Ticket className={styles.ticketDialogTicket} disabled ticket={ticket} />
       <input
         className={styles.ticketDialogAddress}
         value={address}

@@ -1,6 +1,5 @@
 import KioskBase from "~/lottery/components/Kiosk/KioskBase/KioskBase";
-import TicketList from "~/lottery/components/TicketList";
-import TicketSelectorDialog from "~/lottery/components/TicketSelectorDialog";
+import KioskTickets from "~/lottery/components/Kiosk/KioskConnected/KioskTickets";
 import {
   CONNECTED_LOTTERY_PAGE_STATUS,
   LotteryPageConnectedState,
@@ -18,14 +17,13 @@ const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
     <KioskBase
       windowSlot={<div>doge</div>}
       ticketBoardSlot={
-        <>
-          {!state.checkingConnection && state.connected && (
-            <TicketList
-              tickets={state.tickets}
-              onClickTicket={handlers.selectTicket}
-            />
-          )}
-        </>
+        !state.checkingConnection &&
+        state.connected && (
+          <KioskTickets
+            tickets={state.tickets}
+            onClickTicket={handlers.selectTicket}
+          />
+        )
       }
       actionsSlot={
         <>

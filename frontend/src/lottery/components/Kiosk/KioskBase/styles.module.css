@@ -30,17 +30,32 @@
     top: 2%;
     right: 4.5%;
     display: flex;
-    padding: 0 3%;
     flex-direction: column;
 }
 
-.ticketBoardTitle {
+.ticketsBoardTitle {
     font-size: 14px;
     font-weight: 500;
     color: #000000;
     text-align: center;
     padding: 0;
     margin: 4% 0 2%;
+}
+
+.ticketsBoardContent {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4% 2%;
+    overflow: auto;
+    padding-bottom: 2.5%;
+    padding: 0 3% 2%;
+}
+
+.ticketsBoardContent > *{
+    background: #393c47;
+    aspect-ratio: 1.48;
+    border-radius: 3.3%/5%;
 }
 
 .window {

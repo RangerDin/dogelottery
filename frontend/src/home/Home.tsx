@@ -1,5 +1,4 @@
 import Kiosk from "~/lottery/components/Kiosk";
-import TicketList from "~/lottery/components/TicketList";
 import Identity from "~/user/components/Identity";
 import ConnectButton from "~/web3/components/ConnectButton";
 import styles from "./styles.module.css";
