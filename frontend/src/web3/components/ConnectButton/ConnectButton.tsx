@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { metamask } from "~/web3/connectors/metamask";
+import styles from "./styles.module.css";
 
 type Props = {
   className?: string;
@@ -12,7 +13,11 @@ const ConnectButton = ({ className, disabled }: Props): JSX.Element => {
   }, []);
 
   return (
-    <button className={className} disabled={disabled} onClick={handleClick}>
+    <button
+      className={`${className} ${styles.connectButton}`}
+      disabled={disabled}
+      onClick={handleClick}
+    >
       Connect
     </button>
   );
