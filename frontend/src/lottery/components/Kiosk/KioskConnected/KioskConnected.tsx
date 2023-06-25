@@ -6,6 +6,8 @@ import {
   LotteryPageDisconnectedState
 } from "~/lottery/declarations/state";
 import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
+import styles from "./styles.module.css";
+import KioskBuyTicketButton from "~/lottery/components/Kiosk/KioskBuyTicketButton";
 
 type Props = {
   state: LotteryPageDisconnectedState | LotteryPageConnectedState;
@@ -35,7 +37,7 @@ const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
           {state.connected &&
             state.status ===
               CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET && (
-              <button onClick={handlers.prepareNewTickets}>buy ticket</button>
+              <KioskBuyTicketButton onClick={handlers.prepareNewTickets} />
             )}
         </>
       }
