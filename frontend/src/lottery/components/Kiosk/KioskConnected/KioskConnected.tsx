@@ -6,8 +6,8 @@ import {
   LotteryPageDisconnectedState
 } from "~/lottery/declarations/state";
 import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
-import styles from "./styles.module.css";
 import KioskBuyTicketButton from "~/lottery/components/Kiosk/KioskBuyTicketButton";
+import Doge from "~/lottery/components/Doge";
 
 type Props = {
   state: LotteryPageDisconnectedState | LotteryPageConnectedState;
@@ -17,7 +17,7 @@ type Props = {
 const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
   return (
     <KioskBase
-      windowSlot={<div>doge</div>}
+      windowSlot={<Doge />}
       ticketBoardSlot={
         !state.checkingConnection &&
         state.connected && (
