@@ -14,8 +14,11 @@ export const Home = () => {
       <div className={styles.identity}>
         {!state.checkingConnection && (
           <>
-            {!state.connected && <ConnectButton disabled={state.connecting} />}
             {state.connected && <Identity address={state.address} />}
+            <ConnectButton
+              connected={state.connected}
+              disabled={!state.connected && state.connecting}
+            />
           </>
         )}
       </div>

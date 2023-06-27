@@ -6,9 +6,9 @@
 
 .identity {
   display: flex;
-  justify-content: flex-end;
   min-height: 64px;
   padding: 6px 12px;
+  width: 100%;
 }
 
 .mainContent {

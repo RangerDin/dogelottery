@@ -1,11 +1,12 @@
-.connectButton {
+.button {
   border: 0;
   flex: 1;
   border-radius: 5px;
   font-size: 14px;
   font-weight: 600;
   color: #ffffff;
-  padding: 20px 30px;
+  padding: 18px 30px;
+  margin-left: auto;
   background: #76b176;
   max-width: 200px;
 }
