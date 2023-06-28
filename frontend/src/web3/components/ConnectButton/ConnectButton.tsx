@@ -1,31 +1,36 @@
 import { useCallback } from "react";
 import { metamask } from "~/web3/connectors/metamask";
 import styles from "./styles.module.css";
+import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
 
 type Props = {
   connected: boolean;
   className?: string;
   disabled?: boolean;
+  handlers: LotteryPageHandlers;
 };
 
 const ConnectButton = ({
   connected,
   className,
-  disabled
+  disabled,
+  handlers
 }: Props): JSX.Element => {
-  const handleClick = useCallback(() => {
+  const handlerClick = () => {
     if (connected) {
-      metamask.resetState();
+      handlers.disconnect();
+      handlers.onDisconnected();
     } else {
-      metamask.activate();
+      handlers.connect();
+      handlers.onConnected();
     }
-  }, [connected]);
+  };
 
   return (
     <button
       className={`${className} ${styles.button}`}
       disabled={disabled}
-      onClick={handleClick}
+      onClick={handlerClick}
     >
       {connected ? "Disconnect" : "Connect"}
     </button>

@@ -1,6 +1,4 @@
-import { SpecificTicketSelectorDialogProps } from "~/lottery/components/TicketSelectorDialog/TicketSelectorDialog";
 import { LotteryTicket, LotteryTicketId } from "~/lottery/declarations/ticket";
-import { UseDialogHookResult } from "~/ui/Dialog/useDialog";
 
 export enum CONNECTED_LOTTERY_PAGE_STATUS {
   OFFERING_TO_BUY_TICKET = "OFFERING_TO_BUY_TICKET",
@@ -14,27 +12,32 @@ export enum CONNECTED_LOTTERY_PAGE_STATUS {
   BUYING_TICKET = "BUYING_TICKET"
 }
 
-export type LotteryPageState =
-  | LotteryPageCheckingConnectionState
-  | LotteryPageDisconnectedState
-  | LotteryPageConnectedState;
-
-export type LotteryPageCheckingConnectionState = {
-  checkingConnection: true;
-};
-
-export type LotteryPageDisconnectedState = {
-  checkingConnection: false;
-  connected: false;
-  connecting: boolean;
-};
-
-export type LotteryPageConnectedState = LotteryPageConnectedCommonState &
-  MutableLotteryPageStateWithActiveTicket;
+export enum LOTTERY_PAGE_UI_TRANSITION {
+  CONNECTING = "CONNECTING",
+  DISCONNECTING = "DISCONNECTING"
+}
 
 export type MutableLotteryPageState =
+  | MutableLotteryPageStateDisconnected
+  | MutableLotteryPageStateConnecting
+  | MutableLotteryPageStateConnected;
+
+export type MutableLotteryPageStateDisconnected = {
+  uiTransition: null;
+  status: null;
+};
+
+export type MutableLotteryPageStateConnecting = {
+  uiTransition: LOTTERY_PAGE_UI_TRANSITION.CONNECTING;
+  status: null;
+};
+
+export type MutableLotteryPageStateConnected = {
+  uiTransition: LOTTERY_PAGE_UI_TRANSITION.DISCONNECTING | null;
+} & (
   | LotteryPageStateWithoutActiveTicket
-  | MutableLotteryPageStateWithActiveTicketId;
+  | MutableLotteryPageStateWithActiveTicketId
+);
 
 export type MutableLotteryPageStateWithActiveTicketId =
   | LotteryPageBuyingTicketState
@@ -44,26 +47,10 @@ export type MutableLotteryPageStateWithActiveTicketId =
   | LotteryPageOfferingToOpenTicketState
   | LotteryPageOpeningTicketState;
 
-export type MutableLotteryPageStateWithActiveTicket =
-  | LotteryPageStateWithoutActiveTicket
-  | ReplaceActiveIdToActive<LotteryPageBuyingTicketState>
-  | ReplaceActiveIdToActive<LotteryPageShowingTicketState>
-  | ReplaceActiveIdToActive<LotteryPageOfferingToSendTicketState>
-  | ReplaceActiveIdToActive<LotteryPageSendingTicketState>
-  | ReplaceActiveIdToActive<LotteryPageOfferingToOpenTicketState>
-  | ReplaceActiveIdToActive<LotteryPageOpeningTicketState>;
-
 export type LotteryPageStateWithoutActiveTicket =
   | LotteryPageOfferingToBuyTicketState
   | LotteryPagePreparingTicketsState
   | LotteryPageSelectingTicketState;
-
-type LotteryPageConnectedCommonState = {
-  checkingConnection: false;
-  connected: true;
-  address?: string;
-  ticketSelectionDialog: UseDialogHookResult<SpecificTicketSelectorDialogProps>;
-};
 
 type LotteryPageOfferingToBuyTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET;
@@ -115,11 +102,4 @@ type LotteryPageOpeningTicketState = {
   status: CONNECTED_LOTTERY_PAGE_STATUS.OPENING_TICKET;
   tickets: LotteryTicket[];
   activeTicketId: LotteryTicketId;
-};
-
-type ReplaceActiveIdToActive<State extends { activeTicketId: string }> = Omit<
-  State,
-  "activeTicketId"
-> & {
-  activeTicket: LotteryTicket;
 };

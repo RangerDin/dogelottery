@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   CONNECTED_LOTTERY_PAGE_STATUS,
-  LotteryPageState,
+  LOTTERY_PAGE_UI_TRANSITION,
   MutableLotteryPageState
 } from "~/lottery/declarations/state";
 import {
@@ -18,6 +18,10 @@ import { sendLotteryTicket } from "~/web3/tickets/send";
 import { LOTTERY_TICKETS_TO_GENERATE } from "~/lottery/constants";
 import useDialog from "~/ui/Dialog/useDialog";
 import { SpecificTicketSelectorDialogProps } from "~/lottery/components/TicketSelectorDialog/TicketSelectorDialog";
+import {
+  LOTTERY_PAGE_CONNECTION_STATUS,
+  LotteryPageState
+} from "~/lottery/declarations/page";
 
 const { useIsActive, useIsActivating, useAccount, useProvider } = hooks;
 
@@ -36,6 +40,10 @@ export type LotteryPageHandlers = {
     activeTicketId: LotteryTicketId,
     openSlot: LotteryTicketSlot
   ) => void;
+  connect: () => void;
+  onConnected: () => void;
+  disconnect: () => void;
+  onDisconnected: () => void;
 };
 
 type UseLotteryPageStateResult = {
@@ -44,8 +52,8 @@ type UseLotteryPageStateResult = {
 };
 
 const INITIAL_STATE: MutableLotteryPageState = {
-  status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
-  tickets: []
+  uiTransition: null,
+  status: null
 };
 
 const useLotteryPageState = (): UseLotteryPageStateResult => {
@@ -73,15 +81,30 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   const state: LotteryPageState = useMemo((): LotteryPageState => {
     if (checkingConnection) {
       return {
-        checkingConnection: true
+        connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CHECKING_CONNECTION
       };
     }
 
-    if (!isActive) {
+    if (
+      isActivating ||
+      mutableState.uiTransition === LOTTERY_PAGE_UI_TRANSITION.CONNECTING
+    ) {
       return {
-        connected: false,
-        connecting: isActivating,
-        checkingConnection: false
+        connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CONNECTING
+      };
+    }
+
+    if (
+      mutableState.uiTransition === LOTTERY_PAGE_UI_TRANSITION.DISCONNECTING
+    ) {
+      return {
+        connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.DISCONNECTING
+      };
+    }
+
+    if (!isActive || mutableState.status == null) {
+      return {
+        connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.DISCONNECTED
       };
     }
 
@@ -92,8 +115,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       mutableState.status === CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET
     ) {
       return {
-        connected: true,
-        checkingConnection: false,
+        connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED,
         address,
         ticketSelectionDialog,
         ...mutableState
@@ -109,8 +131,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     }
 
     return {
-      connected: true,
-      checkingConnection: false,
+      connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED,
       address,
       ticketSelectionDialog,
       ...mutableState,
@@ -126,10 +147,16 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   ]);
 
   const closeTicket = () => {
-    setMutableState(state => ({
-      ...state,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
-    }));
+    setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET) {
+        return state;
+      }
+
+      return {
+        ...state,
+        status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
+      };
+    });
   };
 
   const cancelSendingTicket = () => {
@@ -164,17 +191,31 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
 
   const cancelTicketsSelection = () => {
     ticketSelectionDialog.dialogProps.onClose();
-    setMutableState(state => ({
-      ...state,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
-    }));
+    setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET) {
+        return state;
+      }
+
+      return {
+        ...state,
+        status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
+      };
+    });
   };
 
   const prepareNewTickets = async () => {
-    setMutableState(state => ({
-      ...state,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.PREPARING_TICKETS
-    }));
+    setMutableState(state => {
+      if (
+        state.status !== CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
+      ) {
+        return state;
+      }
+
+      return {
+        ...state,
+        status: CONNECTED_LOTTERY_PAGE_STATUS.PREPARING_TICKETS
+      };
+    });
 
     const ticketsToChoose = await generateLotteryTickets(
       LOTTERY_TICKETS_TO_GENERATE
@@ -184,15 +225,25 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       ticketsToChoose
     });
 
-    setMutableState(state => ({
-      ...state,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET,
-      ticketsToChoose
-    }));
+    setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.PREPARING_TICKETS) {
+        return state;
+      }
+
+      return {
+        ...state,
+        status: CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET,
+        ticketsToChoose
+      };
+    });
   };
 
   const selectTicket = (ticketId: LotteryTicketId) => {
     setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET) {
+        return state;
+      }
+
       const activeTicket = state.tickets.find(({ id }) => id === ticketId);
 
       if (!activeTicket) {
@@ -203,6 +254,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
         tickets: state.tickets,
         status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
         activeTicketId: ticketId,
+        uiTransition: null,
         openSlot:
           activeTicket.status === LotteryTicketStatus.NEW
             ? null
@@ -222,29 +274,47 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
 
     const activeTicket = await buyLotteryTicket(provider);
 
-    setMutableState(state => ({
-      ...state,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
-      tickets: [...state.tickets, activeTicket],
-      activeTicketId: activeTicket.id,
-      openSlot: null
-    }));
+    setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET) {
+        return state;
+      }
+
+      return {
+        ...state,
+        status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
+        tickets: [...state.tickets, activeTicket],
+        activeTicketId: activeTicket.id,
+        openSlot: null
+      };
+    });
   };
 
   const offerToOpenTicket = async (activeTicketId: LotteryTicketId) => {
-    setMutableState(state => ({
-      ...state,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_OPEN_TICKET,
-      activeTicketId
-    }));
+    setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET) {
+        return state;
+      }
+
+      return {
+        ...state,
+        status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_OPEN_TICKET,
+        activeTicketId
+      };
+    });
   };
 
   const offerToSendTicket = async (activeTicketId: LotteryTicketId) => {
-    setMutableState(state => ({
-      ...state,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_SEND_TICKET,
-      activeTicketId
-    }));
+    setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET) {
+        return state;
+      }
+
+      return {
+        ...state,
+        status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_SEND_TICKET,
+        activeTicketId
+      };
+    });
   };
 
   const sendTicket = async (
@@ -259,11 +329,19 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       throw new Error("There is no address");
     }
 
-    setMutableState(state => ({
-      ...state,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.SENDING_TICKET,
-      activeTicketId
-    }));
+    setMutableState(state => {
+      if (
+        state.status !== CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_SEND_TICKET
+      ) {
+        return state;
+      }
+
+      return {
+        ...state,
+        status: CONNECTED_LOTTERY_PAGE_STATUS.SENDING_TICKET,
+        activeTicketId
+      };
+    });
 
     await sendLotteryTicket({
       ticketId: activeTicketId,
@@ -272,10 +350,17 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       provider
     });
 
-    setMutableState(state => ({
-      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
-      tickets: state.tickets.filter(({ id }) => id !== activeTicketId)
-    }));
+    setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.SENDING_TICKET) {
+        return state;
+      }
+
+      return {
+        status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
+        tickets: state.tickets.filter(({ id }) => id !== activeTicketId),
+        uiTransition: null
+      };
+    });
   };
 
   const openTicket = async (
@@ -287,6 +372,12 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     }
 
     setMutableState(state => {
+      if (
+        state.status !== CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_OPEN_TICKET
+      ) {
+        return state;
+      }
+
       const ticketsWithOpeningTicket = [...state.tickets];
       const activeTicketIndex = ticketsWithOpeningTicket.findIndex(
         ({ id }) => id === activeTicketId
@@ -307,7 +398,8 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
         status: CONNECTED_LOTTERY_PAGE_STATUS.OPENING_TICKET,
         tickets: ticketsWithOpeningTicket,
         activeTicketId,
-        openSlot
+        openSlot,
+        uiTransition: null
       };
     });
 
@@ -318,6 +410,10 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     );
 
     setMutableState(state => {
+      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.OPENING_TICKET) {
+        return state;
+      }
+
       const ticketsWithOpenedTicket = [...state.tickets];
       const activeTicketIndex = ticketsWithOpenedTicket.findIndex(
         ({ id }) => id === activeTicketId
@@ -341,8 +437,48 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
         status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
         tickets: ticketsWithOpenedTicket,
         activeTicketId,
-        openSlot
+        openSlot,
+        uiTransition: null
       };
+    });
+  };
+
+  const connect = async () => {
+    setMutableState({
+      uiTransition: LOTTERY_PAGE_UI_TRANSITION.CONNECTING,
+      status: null
+    });
+
+    metamask.activate();
+  };
+
+  const onConnected = () => {
+    setMutableState({
+      uiTransition: null,
+      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
+      tickets: []
+    });
+  };
+
+  const disconnect = async () => {
+    setMutableState(state => {
+      if (!state.status) {
+        return state;
+      }
+
+      return {
+        ...state,
+        uiTransition: LOTTERY_PAGE_UI_TRANSITION.DISCONNECTING
+      };
+    });
+
+    metamask.resetState();
+  };
+
+  const onDisconnected = () => {
+    setMutableState({
+      uiTransition: null,
+      status: null
     });
   };
 
@@ -359,7 +495,11 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       offerToOpenTicket,
       offerToSendTicket,
       sendTicket,
-      openTicket
+      openTicket,
+      connect,
+      disconnect,
+      onConnected,
+      onDisconnected
     }
   };
 };
