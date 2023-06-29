@@ -9,12 +9,24 @@
   left: 0;
   right: 0;
   bottom: 0;
-  transition: opacity 0.3s;
+}
+
+.appear {
   opacity: 0;
 }
 
-.dialogOpened {
+.appearActive {
   opacity: 1;
+  transition: opacity 1000ms;
+}
+
+.exit {
+  opacity: 1;
+}
+
+.exitActive {
+  opacity: 0;
+  transition: opacity 1000ms;
 }
 
 .dialogCloseButton {

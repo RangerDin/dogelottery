@@ -1,14 +1,13 @@
 import {
-  AnimationEventHandler,
   MouseEventHandler,
   ReactNode,
-  TransitionEventHandler,
   useEffect,
   useRef,
   useState
 } from "react";
 import { createPortal } from "react-dom";
 import styles from "./styles.module.css";
+import CSSTransition from "react-transition-group/CSSTransition";
 
 type Props = {
   open: boolean;
@@ -17,6 +16,8 @@ type Props = {
   onExited: () => void;
 };
 
+const APPEAR_ANIMATION_TIMEOUT = 300;
+
 const Dialog = ({
   open,
   children,
@@ -24,6 +25,7 @@ const Dialog = ({
   onExited
 }: Props): JSX.Element | null => {
   const [addStartAnimation, setAddStartAnimation] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const dialogContentRef = useRef<HTMLDivElement | null>(null);
 
@@ -54,25 +56,31 @@ const Dialog = ({
     onExited();
   };
 
-  const handleTransitionEnd: TransitionEventHandler = event => {
-    if (event.propertyName === "opacity" && !open) {
-      handleExited();
-    }
-  };
-
   const dialogContent = (
-    <div
-      className={`${styles.dialog} ${
-        open && addStartAnimation ? styles.dialogOpened : ""
-      }`}
-      onClick={handleClickBackdrop}
-      onTransitionEnd={handleTransitionEnd}
+    <CSSTransition
+      appear
+      in={open}
+      nodeRef={dialogRef}
+      timeout={APPEAR_ANIMATION_TIMEOUT}
+      classNames={{
+        appear: styles.appear,
+        appearActive: styles.appearActive,
+        exit: styles.exit,
+        exitActive: styles.exitActive
+      }}
+      onExited={handleExited}
     >
-      <button className={styles.dialogCloseButton} />
-      <div ref={dialogContentRef} className={styles.dialogContent}>
-        {children}
+      <div
+        className={styles.dialog}
+        onClick={handleClickBackdrop}
+        ref={dialogRef}
+      >
+        <button className={styles.dialogCloseButton} />
+        <div ref={dialogContentRef} className={styles.dialogContent}>
+          {children}
+        </div>
       </div>
-    </div>
+    </CSSTransition>
   );
 
   return createPortal(dialogContent, document.body);
