@@ -6,6 +6,7 @@ import useLotteryPageState from "~/lottery/useLotteryPageState";
 import TicketDialog from "~/lottery/components/TicketDialog";
 import { CONNECTED_LOTTERY_PAGE_STATUS } from "~/lottery/declarations/state";
 import { LOTTERY_PAGE_CONNECTION_STATUS } from "~/lottery/declarations/page";
+import Fade from "~/ui/animation/Fade";
 
 export const Home = () => {
   const { state, handlers } = useLotteryPageState();
@@ -13,10 +14,22 @@ export const Home = () => {
   return (
     <main className={styles.page}>
       <div className={styles.identity}>
-        {state.connectionStatus ===
-          LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED && (
-          <Identity address={state.address} />
-        )}
+        <Fade
+          in={
+            state.connectionStatus === LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED
+          }
+          mountOnEnter
+          unmountOnExit
+        >
+          <Identity
+            address={
+              state.connectionStatus ===
+              LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED
+                ? state.address
+                : ""
+            }
+          />
+        </Fade>
         {state.connectionStatus !==
           LOTTERY_PAGE_CONNECTION_STATUS.CHECKING_CONNECTION && (
           <ConnectButton

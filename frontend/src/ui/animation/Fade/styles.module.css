@@ -1,0 +1,32 @@
+.fade {
+  opacity: 0;
+}
+
+.appear {
+  opacity: 0;
+}
+
+.appear.appearActive {
+  opacity: 1;
+  position: absolute;
+  transition: opacity 300ms;
+}
+
+.appearDone {
+  opacity: 1;
+}
+
+.exit {
+  opacity: 1;
+}
+
+.exit.exitActive {
+  opacity: 0;
+  position: absolute;
+  transition: opacity 300ms;
+}
+
+
+.exitDone {
+  opacity: 0;
+}

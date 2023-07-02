@@ -8,6 +8,7 @@ import {
   LOTTERY_PAGE_CONNECTION_STATUS,
   LotteryPageState
 } from "~/lottery/declarations/page";
+import Fade from "~/ui/animation/Fade/Fade";
 
 type Props = {
   state: Extract<
@@ -36,18 +37,29 @@ const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
       }
       actionsSlot={
         <>
-          {state.connectionStatus ===
-            LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
-            state.status ===
-              CONNECTED_LOTTERY_PAGE_STATUS.PREPARING_TICKETS && (
-              <div>Preparing tickets</div>
-            )}
-          {state.connectionStatus ===
-            LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
-            state.status ===
-              CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET && (
-              <KioskBuyTicketButton onClick={handlers.prepareNewTickets} />
-            )}
+          <Fade
+            in={
+              state.connectionStatus ===
+                LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
+              state.status === CONNECTED_LOTTERY_PAGE_STATUS.PREPARING_TICKETS
+            }
+            mountOnEnter
+            unmountOnExit
+          >
+            <div>Preparing tickets</div>
+          </Fade>
+          <Fade
+            in={
+              state.connectionStatus ===
+                LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
+              state.status ===
+                CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
+            }
+            mountOnEnter
+            unmountOnExit
+          >
+            <KioskBuyTicketButton onClick={handlers.prepareNewTickets} />
+          </Fade>
         </>
       }
     />

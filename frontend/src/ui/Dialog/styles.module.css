@@ -11,24 +11,6 @@
   bottom: 0;
 }
 
-.appear {
-  opacity: 0;
-}
-
-.appearActive {
-  opacity: 1;
-  transition: opacity 1000ms;
-}
-
-.exit {
-  opacity: 1;
-}
-
-.exitActive {
-  opacity: 0;
-  transition: opacity 1000ms;
-}
-
 .dialogCloseButton {
   padding: 0;
   border: 0;

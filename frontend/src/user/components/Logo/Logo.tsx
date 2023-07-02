@@ -20,10 +20,6 @@ const Logo = ({ address }: Props): JSX.Element => {
 
     container.append(icon);
 
-    console.log({
-      icon
-    });
-
     return () => {
       container.removeChild(icon);
     };

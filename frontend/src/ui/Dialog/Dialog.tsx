@@ -8,6 +8,7 @@ import {
 import { createPortal } from "react-dom";
 import styles from "./styles.module.css";
 import CSSTransition from "react-transition-group/CSSTransition";
+import Fade from "~/ui/animation/Fade/Fade";
 
 type Props = {
   open: boolean;
@@ -25,7 +26,6 @@ const Dialog = ({
   onExited
 }: Props): JSX.Element | null => {
   const [addStartAnimation, setAddStartAnimation] = useState(false);
-  const dialogRef = useRef<HTMLDivElement>(null);
 
   const dialogContentRef = useRef<HTMLDivElement | null>(null);
 
@@ -57,30 +57,20 @@ const Dialog = ({
   };
 
   const dialogContent = (
-    <CSSTransition
-      appear
+    <Fade
       in={open}
-      nodeRef={dialogRef}
       timeout={APPEAR_ANIMATION_TIMEOUT}
-      classNames={{
-        appear: styles.appear,
-        appearActive: styles.appearActive,
-        exit: styles.exit,
-        exitActive: styles.exitActive
-      }}
       onExited={handleExited}
+      mountOnEnter
+      unmountOnExit
     >
-      <div
-        className={styles.dialog}
-        onClick={handleClickBackdrop}
-        ref={dialogRef}
-      >
+      <div className={styles.dialog} onClick={handleClickBackdrop}>
         <button className={styles.dialogCloseButton} />
         <div ref={dialogContentRef} className={styles.dialogContent}>
           {children}
         </div>
       </div>
-    </CSSTransition>
+    </Fade>
   );
 
   return createPortal(dialogContent, document.body);
