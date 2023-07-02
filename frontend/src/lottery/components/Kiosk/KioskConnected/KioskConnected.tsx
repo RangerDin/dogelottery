@@ -11,15 +11,7 @@ import {
 import Fade from "~/ui/animation/Fade/Fade";
 
 type Props = {
-  state: Extract<
-    LotteryPageState,
-    {
-      connectionStatus: Exclude<
-        LOTTERY_PAGE_CONNECTION_STATUS,
-        LOTTERY_PAGE_CONNECTION_STATUS.DISCONNECTED
-      >;
-    }
-  >;
+  state: LotteryPageState;
   handlers: LotteryPageHandlers;
 };
 
@@ -53,7 +45,8 @@ const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
               state.connectionStatus ===
                 LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
               state.status ===
-                CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
+                CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET &&
+              state.transition.shown
             }
             mountOnEnter
             unmountOnExit

@@ -15,6 +15,7 @@ export enum CONNECTED_LOTTERY_PAGE_STATUS {
 export type MutableLotteryPageState = MutableLotteryPageStateConnected;
 
 export type MutableLotteryPageStateConnected = {
+  address?: string;
   transition: {
     shown: boolean;
     inProgress: boolean;

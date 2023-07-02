@@ -68,6 +68,13 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   const address = useAccount();
   const provider = useProvider();
 
+  if (address && mutableState.address !== address) {
+    setMutableState(state => ({
+      ...state,
+      address
+    }));
+  }
+
   useEffect(() => {
     setCheckingConnection(true);
     metamask
@@ -110,7 +117,6 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     ) {
       return {
         connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED,
-        address,
         ticketSelectionDialog,
         ...mutableState
       };
@@ -126,13 +132,11 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
 
     return {
       connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED,
-      address,
       ticketSelectionDialog,
       ...mutableState,
       activeTicket
     };
   }, [
-    address,
     checkingConnection,
     isActivating,
     isActive,
@@ -262,10 +266,6 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       throw new Error("There is no provider");
     }
 
-    if (!address) {
-      throw new Error("There is no address");
-    }
-
     const activeTicket = await buyLotteryTicket(provider);
 
     setMutableState(state => {
@@ -319,7 +319,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       throw new Error("There is no provider");
     }
 
-    if (!address) {
+    if (!mutableState.address) {
       throw new Error("There is no address");
     }
 
@@ -339,7 +339,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
 
     await sendLotteryTicket({
       ticketId: activeTicketId,
-      currentOwnerAddress: address,
+      currentOwnerAddress: mutableState.address,
       newOwnerAddress,
       provider
     });
