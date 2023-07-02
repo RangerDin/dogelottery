@@ -12,6 +12,7 @@ type Props = {
   timeout?: number;
   mountOnEnter?: boolean;
   unmountOnExit?: boolean;
+  onEntered?: () => void;
   onExited?: () => void;
 };
 
@@ -39,6 +40,7 @@ const Fade = (props: Props): JSX.Element => {
       mountOnEnter={props.mountOnEnter}
       unmountOnExit={props.unmountOnExit}
       onExited={props.onExited}
+      onEntered={props.onEntered}
     >
       {(state, childProps) => {
         if (!isValidElement(props.children)) {

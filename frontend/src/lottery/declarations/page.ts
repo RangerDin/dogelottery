@@ -10,8 +10,7 @@ export enum LOTTERY_PAGE_CONNECTION_STATUS {
   CHECKING_CONNECTION = "CHECKING_CONNECTION",
   DISCONNECTED = "DISCONNECTED",
   CONNECTED = "CONNECTED",
-  CONNECTING = "CONNECTING",
-  DISCONNECTING = "DISCONNECTING"
+  CONNECTING = "CONNECTING"
 }
 
 export type LotteryPageState =
@@ -28,6 +27,10 @@ export type LotteryPageConnectedState = LotteryPageConnectedCommonState &
 
 type LotteryPageConnectedCommonState = {
   connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED;
+  transition: {
+    shown: boolean;
+    inProgress: boolean;
+  };
   address?: string;
   ticketSelectionDialog: UseDialogHookResult<SpecificTicketSelectorDialogProps>;
 };

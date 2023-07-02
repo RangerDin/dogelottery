@@ -14,22 +14,18 @@ export const Home = () => {
   return (
     <main className={styles.page}>
       <div className={styles.identity}>
-        <Fade
-          in={
-            state.connectionStatus === LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED
-          }
-          mountOnEnter
-          unmountOnExit
-        >
-          <Identity
-            address={
-              state.connectionStatus ===
-              LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED
-                ? state.address
-                : ""
-            }
-          />
-        </Fade>
+        {state.connectionStatus ===
+          LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED && (
+          <Fade
+            in={state.status && state.transition.shown}
+            onEntered={handlers.onConnected}
+            onExited={handlers.onDisconnected}
+            mountOnEnter
+            unmountOnExit
+          >
+            <Identity address={state.address} />
+          </Fade>
+        )}
         {state.connectionStatus !==
           LOTTERY_PAGE_CONNECTION_STATUS.CHECKING_CONNECTION && (
           <ConnectButton
@@ -41,9 +37,7 @@ export const Home = () => {
             }
             disabled={
               state.connectionStatus ===
-                LOTTERY_PAGE_CONNECTION_STATUS.CONNECTING ||
-              state.connectionStatus ===
-                LOTTERY_PAGE_CONNECTION_STATUS.DISCONNECTING
+              LOTTERY_PAGE_CONNECTION_STATUS.CONNECTING
             }
             handlers={handlers}
           />

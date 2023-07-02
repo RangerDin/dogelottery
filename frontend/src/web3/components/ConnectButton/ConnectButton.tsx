@@ -19,10 +19,8 @@ const ConnectButton = ({
   const handlerClick = () => {
     if (connected) {
       handlers.disconnect();
-      handlers.onDisconnected();
     } else {
       handlers.connect();
-      handlers.onConnected();
     }
   };
 

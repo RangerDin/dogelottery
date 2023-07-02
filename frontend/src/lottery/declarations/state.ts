@@ -12,29 +12,17 @@ export enum CONNECTED_LOTTERY_PAGE_STATUS {
   BUYING_TICKET = "BUYING_TICKET"
 }
 
-export enum LOTTERY_PAGE_UI_TRANSITION {
-  CONNECTING = "CONNECTING",
-  DISCONNECTING = "DISCONNECTING"
-}
-
-export type MutableLotteryPageState =
-  | MutableLotteryPageStateDisconnected
-  | MutableLotteryPageStateConnecting
-  | MutableLotteryPageStateConnected;
-
-export type MutableLotteryPageStateDisconnected = {
-  uiTransition: null;
-  status: null;
-};
-
-export type MutableLotteryPageStateConnecting = {
-  uiTransition: LOTTERY_PAGE_UI_TRANSITION.CONNECTING;
-  status: null;
-};
+export type MutableLotteryPageState = MutableLotteryPageStateConnected;
 
 export type MutableLotteryPageStateConnected = {
-  uiTransition: LOTTERY_PAGE_UI_TRANSITION.DISCONNECTING | null;
+  transition: {
+    shown: boolean;
+    inProgress: boolean;
+  };
 } & (
+  | {
+      status: null;
+    }
   | LotteryPageStateWithoutActiveTicket
   | MutableLotteryPageStateWithActiveTicketId
 );

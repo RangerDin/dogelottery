@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   CONNECTED_LOTTERY_PAGE_STATUS,
-  LOTTERY_PAGE_UI_TRANSITION,
   MutableLotteryPageState
 } from "~/lottery/declarations/state";
 import {
@@ -52,8 +51,11 @@ type UseLotteryPageStateResult = {
 };
 
 const INITIAL_STATE: MutableLotteryPageState = {
-  uiTransition: null,
-  status: null
+  status: null,
+  transition: {
+    inProgress: false,
+    shown: false
+  }
 };
 
 const useLotteryPageState = (): UseLotteryPageStateResult => {
@@ -85,24 +87,16 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       };
     }
 
-    if (
-      isActivating ||
-      mutableState.uiTransition === LOTTERY_PAGE_UI_TRANSITION.CONNECTING
-    ) {
+    if (isActivating) {
       return {
         connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CONNECTING
       };
     }
 
     if (
-      mutableState.uiTransition === LOTTERY_PAGE_UI_TRANSITION.DISCONNECTING
+      (!isActive && !mutableState.transition.inProgress) ||
+      mutableState.status == null
     ) {
-      return {
-        connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.DISCONNECTING
-      };
-    }
-
-    if (!isActive || mutableState.status == null) {
       return {
         connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.DISCONNECTED
       };
@@ -251,10 +245,10 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       }
 
       return {
+        ...state,
         tickets: state.tickets,
         status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
         activeTicketId: ticketId,
-        uiTransition: null,
         openSlot:
           activeTicket.status === LotteryTicketStatus.NEW
             ? null
@@ -356,6 +350,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       }
 
       return {
+        ...state,
         status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
         tickets: state.tickets.filter(({ id }) => id !== activeTicketId),
         uiTransition: null
@@ -395,6 +390,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       ticketsWithOpeningTicket[activeTicketIndex] = openingTicket;
 
       return {
+        ...state,
         status: CONNECTED_LOTTERY_PAGE_STATUS.OPENING_TICKET,
         tickets: ticketsWithOpeningTicket,
         activeTicketId,
@@ -434,6 +430,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       ticketsWithOpenedTicket[activeTicketIndex] = openedTicket;
 
       return {
+        ...state,
         status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
         tickets: ticketsWithOpenedTicket,
         activeTicketId,
@@ -445,41 +442,56 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
 
   const connect = async () => {
     setMutableState({
-      uiTransition: LOTTERY_PAGE_UI_TRANSITION.CONNECTING,
-      status: null
+      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
+      tickets: [],
+      transition: {
+        inProgress: true,
+        shown: true
+      }
     });
 
-    metamask.activate();
+    await metamask.activate();
   };
 
   const onConnected = () => {
-    setMutableState({
-      uiTransition: null,
-      status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
-      tickets: []
-    });
-  };
-
-  const disconnect = async () => {
     setMutableState(state => {
-      if (!state.status) {
+      if (
+        state.status !== CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
+      ) {
         return state;
       }
 
       return {
         ...state,
-        uiTransition: LOTTERY_PAGE_UI_TRANSITION.DISCONNECTING
+        status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
+        transition: {
+          inProgress: false,
+          shown: true
+        }
       };
     });
-
-    metamask.resetState();
   };
 
-  const onDisconnected = () => {
-    setMutableState({
-      uiTransition: null,
-      status: null
-    });
+  const disconnect = async () => {
+    setMutableState(state => ({
+      ...state,
+      transition: {
+        inProgress: true,
+        shown: false
+      }
+    }));
+
+    await metamask.resetState();
+  };
+
+  const onDisconnected = async () => {
+    setMutableState(state => ({
+      ...state,
+      transition: {
+        inProgress: false,
+        shown: false
+      }
+    }));
   };
 
   return {
