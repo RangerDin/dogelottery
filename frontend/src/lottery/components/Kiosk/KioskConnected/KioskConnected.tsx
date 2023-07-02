@@ -18,7 +18,7 @@ type Props = {
 const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
   return (
     <KioskBase
-      windowSlot={<Doge />}
+      windowSlot={<Doge state={state} />}
       ticketBoardSlot={
         state.connectionStatus === LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED && (
           <KioskTickets

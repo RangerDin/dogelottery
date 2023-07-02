@@ -9,6 +9,34 @@
   aspect-ratio: 1;
   left: 50%;
   position: absolute;
-  transform: translateX(-50%);
+  transform: translate(-50%, 100%);
   bottom: -6%;
+}
+
+.appear {
+  transform: translate(-50%, 100%);
+}
+
+.appear.appearActive {
+  transform: translate(-50%, 0%);
+  position: absolute;
+  transition: transform 1000ms;
+}
+
+.appearDone {
+  transform: translate(-50%, 0%);
+}
+
+.exit {
+  transform: translate(-50%, 0%);
+}
+
+.exit.exitActive {
+  transform: translate(-50%, 100%);
+  position: absolute;
+  transition: transform 1000ms;
+}
+
+.exitDone {
+  transform: translate(-50%, 100%);
 }
