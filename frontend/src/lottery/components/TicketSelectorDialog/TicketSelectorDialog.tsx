@@ -4,6 +4,7 @@ import Dialog from "~/ui/Dialog/Dialog";
 import styles from "./styles.module.css";
 import { DialogProps } from "~/ui/Dialog/useDialog";
 import { MutableLotteryPageTicketPurchaseState } from "~/lottery/declarations/state";
+import Hint from "~/ui/Hint";
 
 export type SpecificTicketSelectorDialogProps = {
   ticketsToChoose: LotteryTicket[];
@@ -50,6 +51,7 @@ const TicketSelectorDialog = ({
           </li>
         ))}
       </ul>
+      <Hint in>Pick one of the tickets</Hint>
     </Dialog>
   );
 };

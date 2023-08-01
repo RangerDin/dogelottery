@@ -3,6 +3,7 @@ import { isAddress } from "@ethersproject/address";
 import { ChangeEventHandler, useState } from "react";
 import TicketDialogButton from "~/lottery/components/TicketDialog/TicketDialogButton";
 import { LotteryTicket, LotteryTicketId } from "~/lottery/declarations/ticket";
+import Hint from "~/ui/Hint";
 
 type Props = {
   sending: boolean;
@@ -46,6 +47,7 @@ const TicketDialogSending = ({
           Send ticket
         </TicketDialogButton>
       </div>
+      <Hint in={sending}>The ticket is being sent...</Hint>
     </>
   );
 };

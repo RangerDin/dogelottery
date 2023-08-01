@@ -1,11 +1,6 @@
-import Ticket from "~/lottery/components/Ticket";
 import TicketDialogButton from "./TicketDialogButton";
-import {
-  LotteryTicket,
-  LotteryTicketSlot
-} from "~/lottery/declarations/ticket";
-import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
 import styles from "./styles.module.css";
+import Hint from "~/ui/Hint";
 
 type Props = {
   opening: boolean;
@@ -23,7 +18,8 @@ const TicketDialogOpening = ({
           Cancel
         </TicketDialogButton>
       </div>
-      <div>To open ticket click on one of the slots</div>
+      <Hint in={opening}>The ticket is opening...</Hint>
+      <Hint in={!opening}>Pick one of the slots to open the ticket</Hint>
     </>
   );
 };
