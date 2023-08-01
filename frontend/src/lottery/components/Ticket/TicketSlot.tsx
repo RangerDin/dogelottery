@@ -4,6 +4,7 @@ import {
   LotteryTicketSlot,
   LotteryTicketStatus
 } from "~/lottery/declarations/ticket";
+import Fade from "~/ui/animation/Fade/Fade";
 
 type Props = {
   slot: LotteryTicketSlot;
@@ -18,7 +19,6 @@ type Props = {
 };
 
 const TicketSlot = ({
-  slot,
   opened,
   winning,
   disabled,
@@ -32,7 +32,9 @@ const TicketSlot = ({
       disabled={disabled}
       onClick={onClick}
     >
-      {opened && winning && <TicketWinningSlot />}
+      <Fade in={opened && winning} mountOnEnter unmountOnExit>
+        <TicketWinningSlot />
+      </Fade>
     </button>
   );
 };

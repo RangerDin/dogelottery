@@ -4,7 +4,6 @@ import ConnectButton from "~/web3/components/ConnectButton";
 import styles from "./styles.module.css";
 import useLotteryPageState from "~/lottery/useLotteryPageState";
 import TicketDialog from "~/lottery/components/TicketDialog";
-import { CONNECTED_LOTTERY_PAGE_STATUS } from "~/lottery/declarations/state";
 import { LOTTERY_PAGE_CONNECTION_STATUS } from "~/lottery/declarations/page";
 import Fade from "~/ui/animation/Fade";
 
@@ -17,7 +16,7 @@ export const Home = () => {
         {state.connectionStatus ===
           LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED && (
           <Fade
-            in={state.status && state.transition.shown}
+            in={state.transition.connection.in}
             onEntered={handlers.onConnected}
             onExited={handlers.onDisconnected}
             mountOnEnter
@@ -46,17 +45,12 @@ export const Home = () => {
       <div className={styles.mainContent}>
         <Kiosk className={styles.kiosk} state={state} handlers={handlers} />
         {state.connectionStatus === LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
-          (state.status === CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET ||
-            state.status === CONNECTED_LOTTERY_PAGE_STATUS.SENDING_TICKET ||
-            state.status === CONNECTED_LOTTERY_PAGE_STATUS.OPENING_TICKET ||
-            state.status ===
-              CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_SEND_TICKET ||
-            state.status ===
-              CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_OPEN_TICKET) && (
+          state.ticketDialog.mounted &&
+          state.activeTicket && (
             <TicketDialog
-              open
+              {...state.ticketDialog.dialogProps}
+              {...state.ticketDialog.payload}
               ticket={state.activeTicket}
-              status={state.status}
               handlers={handlers}
             />
           )}

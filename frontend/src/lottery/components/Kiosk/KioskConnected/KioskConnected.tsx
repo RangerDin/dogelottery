@@ -28,32 +28,24 @@ const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
         )
       }
       actionsSlot={
-        <>
-          <Fade
-            in={
+        <Fade
+          in={
+            state.connectionStatus ===
+              LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
+            state.transition.connection.in
+          }
+          mountOnEnter
+          unmountOnExit
+        >
+          <KioskBuyTicketButton
+            disabled={
               state.connectionStatus ===
                 LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
-              state.status === CONNECTED_LOTTERY_PAGE_STATUS.PREPARING_TICKETS
+              state.transition.ticketPreparing.in
             }
-            mountOnEnter
-            unmountOnExit
-          >
-            <div>Preparing tickets</div>
-          </Fade>
-          <Fade
-            in={
-              state.connectionStatus ===
-                LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
-              state.status ===
-                CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET &&
-              state.transition.shown
-            }
-            mountOnEnter
-            unmountOnExit
-          >
-            <KioskBuyTicketButton onClick={handlers.prepareNewTickets} />
-          </Fade>
-        </>
+            onClick={handlers.prepareNewTickets}
+          />
+        </Fade>
       }
     />
   );

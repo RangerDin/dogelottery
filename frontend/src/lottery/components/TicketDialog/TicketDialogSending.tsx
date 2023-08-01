@@ -1,21 +1,19 @@
 import styles from "./styles.module.css";
 import { isAddress } from "@ethersproject/address";
 import { ChangeEventHandler, useState } from "react";
-import Ticket from "~/lottery/components/Ticket";
 import TicketDialogButton from "~/lottery/components/TicketDialog/TicketDialogButton";
-import { LotteryTicket } from "~/lottery/declarations/ticket";
-import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
+import { LotteryTicket, LotteryTicketId } from "~/lottery/declarations/ticket";
 
 type Props = {
-  ticket: LotteryTicket;
-  handlers: LotteryPageHandlers;
   sending: boolean;
+  onClickCancel: () => void;
+  onClickSendTicket: (address: string) => void;
 };
 
 const TicketDialogSending = ({
-  ticket,
-  handlers: { sendTicket, cancelSendingTicket },
-  sending
+  sending,
+  onClickCancel,
+  onClickSendTicket
 }: Props): JSX.Element | null => {
   const [address, setAddress] = useState("");
 
@@ -26,12 +24,11 @@ const TicketDialogSending = ({
   };
 
   const handleClickSendTicket = () => {
-    sendTicket(ticket.id, address);
+    onClickSendTicket(address);
   };
 
   return (
     <>
-      <Ticket className={styles.ticketDialogTicket} disabled ticket={ticket} />
       <input
         className={styles.ticketDialogAddress}
         value={address}
@@ -39,8 +36,8 @@ const TicketDialogSending = ({
         onChange={handleChangeAddress}
       />
       <div className={styles.ticketDialogActions}>
-        <TicketDialogButton disabled={sending} onClick={cancelSendingTicket}>
-          cancel
+        <TicketDialogButton disabled={sending} onClick={onClickCancel}>
+          Cancel
         </TicketDialogButton>
         <TicketDialogButton
           disabled={sending || !isAddress(address)}

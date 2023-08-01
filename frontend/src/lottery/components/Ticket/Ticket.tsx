@@ -23,16 +23,30 @@ const Ticket = ({
   onClick,
   onClickSlot
 }: Props): JSX.Element => {
+  const ticketOpened = ticket.status === LotteryTicketStatus.OPENED;
+
   const handleClickSlot = (slotId: LotteryTicketSlot) => () => {
     onClickSlot?.(slotId);
   };
 
+  const backgroundImage = ticketOpened
+    ? `linear-gradient(45deg, hsl(${ticket.ticketHue}, 80%, 20%), #111)`
+    : "";
+
   return (
     <article
       className={`${className} ${styles.ticket} ${disabled && styles.disabled}`}
+      style={{
+        backgroundImage
+      }}
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
     >
+      <div
+        className={`${styles.ticketCover} ${
+          ticketOpened ? styles.ticketCoverScratched : ""
+        }`}
+      />
       <div className={styles.ticketSlotContainer}>
         {new Array(LOTTERY_TICKET_SLOTS).fill(null).map((_, index) => (
           <TicketSlot

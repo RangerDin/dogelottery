@@ -1,8 +1,6 @@
+import { SpecificTicketDialogProps } from "~/lottery/components/TicketDialog/declarations";
 import { SpecificTicketSelectorDialogProps } from "~/lottery/components/TicketSelectorDialog/TicketSelectorDialog";
-import {
-  LotteryPageStateWithoutActiveTicket,
-  MutableLotteryPageStateWithActiveTicketId
-} from "~/lottery/declarations/state";
+import { MutableLotteryPageState } from "~/lottery/declarations/state";
 import { LotteryTicket } from "~/lottery/declarations/ticket";
 import { UseDialogHookResult } from "~/ui/Dialog/useDialog";
 
@@ -22,26 +20,9 @@ export type LotteryPageState =
     }
   | LotteryPageConnectedState;
 
-export type LotteryPageConnectedState = LotteryPageConnectedCommonState &
-  MutableLotteryPageStateWithActiveTicket;
-
-type LotteryPageConnectedCommonState = {
+export type LotteryPageConnectedState = {
   connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED;
-  transition: {
-    shown: boolean;
-    inProgress: boolean;
-  };
-  address?: string;
+  activeTicket: LotteryTicket | null;
   ticketSelectionDialog: UseDialogHookResult<SpecificTicketSelectorDialogProps>;
-};
-
-export type MutableLotteryPageStateWithActiveTicket =
-  | LotteryPageStateWithoutActiveTicket
-  | ReplaceActiveIdToActive<MutableLotteryPageStateWithActiveTicketId>;
-
-type ReplaceActiveIdToActive<State extends { activeTicketId: string }> = Omit<
-  State,
-  "activeTicketId"
-> & {
-  activeTicket: LotteryTicket;
-};
+  ticketDialog: UseDialogHookResult<SpecificTicketDialogProps>;
+} & MutableLotteryPageState;

@@ -1,5 +1,4 @@
 import Ticket from "~/lottery/components/Ticket/Ticket";
-import { LotteryPageSelectingTicketState } from "~/lottery/declarations/state";
 import { LotteryTicket, LotteryTicketId } from "~/lottery/declarations/ticket";
 import Dialog from "~/ui/Dialog/Dialog";
 import styles from "./styles.module.css";

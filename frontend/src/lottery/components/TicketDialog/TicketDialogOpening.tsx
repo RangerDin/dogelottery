@@ -8,30 +8,21 @@ import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
 import styles from "./styles.module.css";
 
 type Props = {
-  ticket: LotteryTicket;
   opening: boolean;
-  handlers: LotteryPageHandlers;
+  onClickCancel: () => void;
 };
 
 const TicketDialogOpening = ({
-  ticket,
   opening,
-  handlers: { openTicket, cancelOpeningTicket }
+  onClickCancel
 }: Props): JSX.Element | null => {
-  const handleClickSlot = (slot: LotteryTicketSlot) => {
-    openTicket(ticket.id, slot);
-  };
-
   return (
     <>
-      <Ticket
-        className={styles.ticketDialogTicket}
-        ticket={ticket}
-        onClickSlot={handleClickSlot}
-      />
-      <TicketDialogButton disabled={opening} onClick={cancelOpeningTicket}>
-        Cancel
-      </TicketDialogButton>
+      <div className={styles.ticketDialogActions}>
+        <TicketDialogButton disabled={opening} onClick={onClickCancel}>
+          Cancel
+        </TicketDialogButton>
+      </div>
       <div>To open ticket click on one of the slots</div>
     </>
   );

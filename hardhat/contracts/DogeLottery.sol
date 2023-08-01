@@ -300,14 +300,14 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
 
         return abi.encodePacked(
             'hsl(',
-                _getTicketBackgroundStartColorHue(ticketId).toString(), ',',
+                getTicketBackgroundStartColorHue(ticketId).toString(), ',',
                 '80%,',
                 '20%',
             ')'
         );
     }
 
-    function _getTicketBackgroundStartColorHue(uint256 ticketId) private view returns (uint256) {
+    function getTicketBackgroundStartColorHue(uint256 ticketId) public view returns (uint256) {
         uint256 hash = uint256(sha256(abi.encodePacked(
             address(this),
             ticketId,

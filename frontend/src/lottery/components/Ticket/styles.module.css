@@ -1,13 +1,30 @@
 .ticket {
   aspect-ratio: 1.48;
   border-radius: 3.3%/5%;
-  background: #494c57;
   padding: 0;
   border: 1px solid #000000;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.ticketCover {
+  background-image: linear-gradient(45deg, #494c57, #494c57);
   position: relative;
+  border-radius: 3.3%/5%;
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+  opacity: 1;
+  position: absolute;
+  transition: opacity 0.5s;
+}
+
+.ticketCoverScratched {
+  opacity: 0;
 }
 
 .disabled:after {
@@ -35,16 +52,16 @@
   justify-content: center;
   position: absolute;
   padding: 0;
-  background: #7d7d7d;
+  background-color: #7d7d7d;
   width: 25%;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 1px solid #000000;
-  transition: border-color 0.3s, outline 0.3s, background-color 0.2s;
+  transition: border-color 0.5s, outline 0.5s, background-color 0.5s;
 }
 
 .ticketSlotOpened {
-  background: #ffffff;
+  background-color: #ffffff;
 }
 
 .ticketSlot:hover:not(:disabled) {

@@ -147,6 +147,32 @@ export const LOTTERY_CONTRACT_ABI = [
   },
   {
     inputs: [],
+    name: "BONE_OFFSET_X",
+    outputs: [
+      {
+        internalType: "int16",
+        name: "",
+        type: "int16"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "BONE_OFFSET_Y",
+    outputs: [
+      {
+        internalType: "int16",
+        name: "",
+        type: "int16"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
     name: "CALLBACK_GAS_LIMIT_TO_GET_RANDOM_WORDS",
     outputs: [
       {
@@ -327,6 +353,25 @@ export const LOTTERY_CONTRACT_ABI = [
   {
     inputs: [],
     name: "getNewTicketPrice",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "ticketId",
+        type: "uint256"
+      }
+    ],
+    name: "getTicketBackgroundStartColorHue",
     outputs: [
       {
         internalType: "uint256",

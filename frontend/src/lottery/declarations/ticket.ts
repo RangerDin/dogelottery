@@ -20,7 +20,9 @@ export type LotteryTicket = {
       status: LotteryTicketStatus.OPENED;
       openedSlot: LotteryTicketSlot;
       winningSlot: LotteryTicketSlot;
+      ticketHue: number;
     }
 );
 
 export type LotteryTicketSlot = number;
+export type LotteryTicketHue = number;

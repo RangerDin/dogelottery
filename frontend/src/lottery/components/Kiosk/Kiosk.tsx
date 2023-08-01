@@ -14,10 +14,6 @@ type Props = {
 };
 
 const Kiosk = ({ className, state, handlers }: Props): JSX.Element => {
-  const handleCloseTicketSelectorDialog = () => {
-    handlers.cancelTicketsSelection();
-  };
-
   return (
     <section className={className}>
       {state.connectionStatus ===
@@ -31,7 +27,6 @@ const Kiosk = ({ className, state, handlers }: Props): JSX.Element => {
             state.ticketSelectionDialog.mounted && (
               <TicketSelectorDialog
                 {...state.ticketSelectionDialog.dialogProps}
-                onClose={handleCloseTicketSelectorDialog}
                 {...state.ticketSelectionDialog.payload}
                 onClickTicket={handlers.buyAndSelectNewTicket}
               />
