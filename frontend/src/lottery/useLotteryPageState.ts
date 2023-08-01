@@ -441,6 +441,8 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   };
 
   const connect = async () => {
+    await metamask.activate();
+
     setMutableState({
       status: CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET,
       tickets: [],
@@ -449,8 +451,6 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
         shown: true
       }
     });
-
-    await metamask.activate();
   };
 
   const onConnected = () => {
