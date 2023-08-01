@@ -40,6 +40,10 @@ const Ticket = ({
             slot={index}
             status={ticket.status}
             disabled={disabled || ticket.status !== LotteryTicketStatus.NEW}
+            opened={
+              ticket.status === LotteryTicketStatus.OPENED &&
+              ticket.openedSlot === index
+            }
             winning={
               ticket.status === LotteryTicketStatus.OPENED &&
               ticket.winningSlot === index

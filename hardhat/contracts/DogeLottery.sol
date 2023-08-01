@@ -22,6 +22,8 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     uint8 public constant MIN_REQUEST_CONFIRMATIONS_TO_GET_RANDOM_WORDS = 3;
     uint32 public constant CALLBACK_GAS_LIMIT_TO_GET_RANDOM_WORDS = 100000;
     uint32 public constant NUMBER_OF_RANDOM_WORDS = 1;
+    int16 public constant BONE_OFFSET_X = -50;
+    int16 public constant BONE_OFFSET_Y = -25;
 
     mapping(uint256 => uint8) private _choices;
     mapping(uint256 => uint8) private _winChoices;
@@ -29,12 +31,12 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     mapping(address => uint256) private _winnings;
     mapping(uint256 => uint256) private _ticketPrices;
 
-    int8[2][5] private coordinates = [
-        [int8(-30), -15],
-        [int8(30), -15],
-        [int8(0), 0],
-        [int8(-30), 15],
-        [int8(30), 15]
+    int16[4][5] private coordinates = [
+        [int16(414), 407, 64, 60],
+        [int16(708), 266, 64, 60],
+        [int16(806), 407, 64, 60],
+        [int16(512), 266, 64, 60],
+        [int16(610), 471, 129, 96]
     ];
 
     VRFCoordinatorV2Interface private immutable _vrfCoordinator;
@@ -234,18 +236,17 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     }
 
     function getTicketImage(uint256 ticketId) public view returns (bytes memory) {
-        /* TODO: return real ticket svg and optimize */
         return abi.encodePacked(
-            '<svg width="100mm" height="120mm" version="1.1" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">',
-                '<defs>',
-                    '<circle id="a" cx="50" cy="90" r="8" />',
-                '</defs>',
-                '<path width="100" height="120" d="m5 0h89.218a5.7821 6.0001 0 0 1 5.7821 6.0001v108.81a5 5.1885 0 0 1-5 5.1885h-89.218a5.7821 6.0001 0 0 1-5.7821-6.0001v-108.81a5 5.1885 0 0 1 5-5.1885z" />',
-                '<g fill="#ccc">',
-                    _getTicketImageSlots(ticketId),
+            '<svg fill="none" version="1.1" viewBox="0 0 1227 774" xmlns="http://www.w3.org/2000/svg">',
+                _getTicketBackground(ticketId),
+                '<g transform="translate(.5 .5)" rx="0" ry="0" stroke="#1e1e1e">',
+                    '<rect width="1226" height="773" rx="5" ry="5" fill="url(#b)" />',
+                    '<g fill="#7d7d7d">',
+                        _getTicketImageSlots(ticketId),
+                    '</g>'
                 '</g>',
-                _getTicketImageTitle(ticketId),
                 _getTicketImageBone(ticketId),
+                _getTicketImageTitle(ticketId),
             '</svg>'
         );
     }
@@ -253,46 +254,86 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
 
     function _getTicketImageSlots(uint256 ticketId) private view returns (bytes memory) {
         bytes memory slots;
-        uint8 slotIndex = _winChoices[ticketId];
+        uint8 slotIndex = _choices[ticketId];
 
         for (uint8 i = 0; i < MAX_CHOICES; i++) {
             slots = abi.encodePacked(
                 slots,
-                _getTicketImageSlot(coordinates[i][0], coordinates[i][1], slotIndex == i + 1)
+                _getTicketImageSlot(coordinates[i][0], coordinates[i][1], coordinates[i][2], coordinates[i][3], slotIndex == i + 1)
             );
         }
 
         return slots;
     }
 
-    function _getTicketImageSlot(int256 x, int256 y, bool scrachedOff) private pure returns (bytes memory) {
+    function _getTicketImageSlot(int256 x, int256 y, int256 rx, int256 ry, bool scrachedOff) private pure returns (bytes memory) {
         return abi.encodePacked(
-            '<use x="', _int256ToString(x), '" y="', _int256ToString(y), '" xlink:href="#a"', scrachedOff ? ' fill="#fff"' : '' ,' />'
+            '<ellipse cx="', _int256ToString(x), '" cy="', _int256ToString(y), '" rx="', _int256ToString(rx), '" ry="', _int256ToString(ry), '"', scrachedOff ? ' fill="#fff"' : '', '/>'
         );
     }
 
     function _getTicketImageTitle(uint256 ticketId) private pure returns (bytes memory) {
         return abi.encodePacked(
-            '<text x="10" y="15" fill="#fff" font-family="sans-serif" font-size="8px" stroke-width=".5" style="line-height:1.25" xml:space="preserve">Ticket #',
+            '<text x="40" y="80" fill="#fff" font-family="sans-serif" font-size="40px" xml:space="preserve">Ticket ',
                 ticketId.toString(),
             '</text>'
         );
     }
 
+    function _getTicketBackground(uint256 ticketId) private view returns (bytes memory) {
+        return abi.encodePacked(
+            '<defs>',
+                '<linearGradient id="b" gradientTransform="rotate(-45)">',
+                    '<stop stop-color="', _getTicketBackgroundStartColor(ticketId), '" />',
+                    '<stop stop-color="#111" offset="100%" />',
+                '</linearGradient>',
+            '</defs>'
+        );
+    }
+
+    function _getTicketBackgroundStartColor(uint256 ticketId) private view returns (bytes memory) {
+        bool newTicket = _winChoices[ticketId] == 0;
+
+        if (newTicket) {
+            return abi.encodePacked('#111');
+        }
+
+        return abi.encodePacked(
+            'hsl(',
+                _getTicketBackgroundStartColorHue(ticketId).toString(), ',',
+                '80%,',
+                '20%',
+            ')'
+        );
+    }
+
+    function _getTicketBackgroundStartColorHue(uint256 ticketId) private view returns (uint256) {
+        uint256 hash = uint256(sha256(abi.encodePacked(
+            address(this),
+            ticketId,
+            _choices[ticketId],
+            _winChoices[ticketId]
+        )));
+        uint256 hue = uint16(hash % 360);
+
+        return hue;
+    }
+
     function _getTicketImageBone(uint256 ticketId) private view returns (string memory) {
         uint8 winChoice = _winChoices[ticketId];
+        uint8 choice = _choices[ticketId];
 
-        if (winChoice == 0) {
+        if (winChoice == 0 || choice != winChoice) {
             return '';
         }
 
         uint8 slotIndex = winChoice - 1;
-        int8 x = coordinates[slotIndex][0];
-        int8 y = coordinates[slotIndex][1];
+        int16 x = coordinates[slotIndex][0] + BONE_OFFSET_X;
+        int16 y = coordinates[slotIndex][1] + BONE_OFFSET_Y;
 
         return string(abi.encodePacked(
-            '<g transform="translate(', _int256ToString(x), _int256ToString(y), ')">',
-                '<path d="m53.887 92.381c-0.61745 9e-3 -1.2074-0.42005-1.3902-1.0096h-4.981c-0.23433 0.79272-1.2065 1.2404-1.96 0.89419-0.78327-0.30496-1.142-1.3383-0.7088-2.0601 0.2954-0.31351-0.28271-0.6522-0.18471-1.0571-0.06532-0.8699 0.77787-1.6517 1.6405-1.5181 0.55269 0.0615 1.0462 0.46857 1.2129 0.99887h4.981c0.23459-0.79239 1.2062-1.2405 1.9597-0.8942 0.73086 0.28829 1.1301 1.2363 0.7415 1.94-0.16903 0.26067-0.33019 0.46362-0.03147 0.6945 0.44658 0.63987 0.01597 1.5659-0.64519 1.8667-0.1969 0.0954-0.41557 0.1451-0.63435 0.1448z" />',
+            '<g transform="translate(', _int256ToString(x), ',', _int256ToString(y), ')">',
+                '<path d="m83 45.5c-5.25 0.0777-10.3-3.62-11.8-8.69h-42.4c-2 6.82-10.3 10.6-16.6 7.7-6.67-2.63-9.71-11.6-6.03-17.8 2.52-2.7-2.4-5.61-1.57-9.09-0.556-7.48 6.62-14.2 14-13 4.71 0.529 8.91 4.03 10.4 8.59h42.4c2-6.82 10.3-10.6 16.6-7.7 6.22 2.48 9.62 10.6 6.31 16.7-1.44 2.25-2.81 3.99-0.268 5.98 3.8 5.5 0.136 13.5-5.49 16.1-1.67 0.82-3.53 1.25-5.4 1.25z" stroke="#1e1e1e" stroke-width="8.89"/>',
             '</g>'
         ));
     }

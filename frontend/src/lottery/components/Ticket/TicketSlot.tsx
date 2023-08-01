@@ -1,3 +1,4 @@
+import TicketWinningSlot from "~/lottery/components/Ticket/TicketWinningSlot";
 import styles from "./styles.module.css";
 import {
   LotteryTicketSlot,
@@ -6,6 +7,7 @@ import {
 
 type Props = {
   slot: LotteryTicketSlot;
+  opened: boolean;
   winning: boolean;
   status:
     | LotteryTicketStatus.OPENED
@@ -17,13 +19,20 @@ type Props = {
 
 const TicketSlot = ({
   slot,
+  opened,
   winning,
   disabled,
   onClick
 }: Props): JSX.Element => {
   return (
-    <button className={styles.ticketSlot} disabled={disabled} onClick={onClick}>
-      {winning && <span>winning</span>}
+    <button
+      className={`${styles.ticketSlot} ${
+        opened ? styles.ticketSlotOpened : ""
+      }`}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {opened && winning && <TicketWinningSlot />}
     </button>
   );
 };

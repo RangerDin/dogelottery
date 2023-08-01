@@ -30,6 +30,9 @@
 }
 
 .ticketSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
   padding: 0;
   background: #7d7d7d;
@@ -38,6 +41,10 @@
   border-radius: 50%;
   border: 1px solid #000000;
   transition: border-color 0.3s, outline 0.3s, background-color 0.2s;
+}
+
+.ticketSlotOpened {
+  background: #ffffff;
 }
 
 .ticketSlot:hover:not(:disabled) {

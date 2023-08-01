@@ -16,13 +16,15 @@ export const openLotteryTicket = async (
 
   await switchEthereumChain(provider);
 
-  const transaction = await contract.openTicket(activeTicketId, openSlot);
+  const contractSlot = openSlot + 1;
+  const transaction = await contract.openTicket(activeTicketId, contractSlot);
 
   await transaction.wait();
 
   const winningChoice = await waitAndGetWinningChoice(activeTicketId, contract);
+  const frontendSlot = winningChoice - 1;
 
-  return winningChoice;
+  return frontendSlot;
 };
 
 const TIMEOUT_BETWEEN_CHECKS = 1000;

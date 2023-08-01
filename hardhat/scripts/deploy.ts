@@ -101,7 +101,8 @@ async function main() {
   console.log(
     `
       DogeLottery contract was deployed to ${dogeLottery.address}. (Owner: ${lotteryOwnerAddress})\n
-      DogeToken was deployed to ${dogeTokenAddress}.
+      DogeToken was deployed: ${dogeTokenAddress}\n
+      VRF coordinator address: ${vrfCoordinatorAddress}
     `
   );
 }
