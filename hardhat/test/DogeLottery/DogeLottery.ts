@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 import { buyTicket } from "./utils";
 
 const BASE_URL = "https://example.com/";
-const TICKET_PRICE = 1_000_000_000_000_000_000n;
+const TICKET_PRICE = 10n;
 const RESERVE = TICKET_PRICE * 20n;
 
 describe("DogeLottery", function () {
@@ -34,9 +34,15 @@ describe("DogeLottery", function () {
       subscriptionReserve
     );
 
+    const dogeTokenMockFactory = await ethers.getContractFactory(
+      "DogeTokenMock"
+    );
+    const dogeToken = await dogeTokenMockFactory.deploy();
+
     const dogeLottery = await DogeLotteryFactory.deploy(
       subscriptionId,
       vrfCoordinatorMock.address,
+      dogeToken.address,
       ethers.utils.formatBytes32String("0x00000012"),
       TICKET_PRICE,
       BASE_URL
@@ -44,13 +50,11 @@ describe("DogeLottery", function () {
 
     await vrfCoordinatorMock.addConsumer(subscriptionId, dogeLottery.address);
 
-    await owner.sendTransaction({
-      to: dogeLottery.address,
-      value: RESERVE,
-    });
+    await dogeToken.transfer(dogeLottery.address, RESERVE);
 
     return {
       dogeLottery,
+      dogeToken,
       vrfCoordinatorMock,
       owner,
       otherAccount,
@@ -78,14 +82,6 @@ describe("DogeLottery", function () {
       const { dogeLottery } = await loadFixture(deployDogeLotteryFixture);
 
       expect(await dogeLottery.getBaseUrl()).to.equal(BASE_URL);
-    });
-
-    it("Should receive and store the funds", async function () {
-      const { dogeLottery } = await loadFixture(deployDogeLotteryFixture);
-
-      const balance = await ethers.provider.getBalance(dogeLottery.address);
-
-      expect(balance).to.equal(RESERVE);
     });
 
     it("Should set the right name and symbol", async function () {
@@ -155,26 +151,44 @@ describe("DogeLottery", function () {
   });
 
   describe("Buy a ticket", () => {
-    it("User cannot buy a ticket with incorrect price", async function () {
+    it("User cannot buy a ticket if user does not set enough allowance", async function () {
       const { dogeLottery, otherAccount } = await loadFixture(
         deployDogeLotteryFixture
       );
 
       const nonOwnerDogeLottery = await dogeLottery.connect(otherAccount);
-      const newTicketPrice = await nonOwnerDogeLottery.getNewTicketPrice();
-      const differentTicketPrice = newTicketPrice.add(1);
 
       await expect(
-        nonOwnerDogeLottery.buyTicket({
-          value: differentTicketPrice,
-        })
-      ).to.be.revertedWith("You should set exact price");
+        nonOwnerDogeLottery.buyTicket()
+      ).to.be.revertedWith("ERC20: insufficient allowance");
+    });
+
+    it("User cannot buy a ticket if user does not have enough money", async function () {
+      const { dogeLottery, dogeToken, otherAccount } = await loadFixture(
+        deployDogeLotteryFixture
+      );
+
+      const halfPrice = TICKET_PRICE / 2n;
+      dogeToken.transfer(otherAccount.address, halfPrice);
+
+      const nonOwnerDogeToken = await dogeToken.connect(otherAccount);
+      nonOwnerDogeToken.approve(dogeLottery.address, TICKET_PRICE);
+
+      const nonOwnerDogeLottery = await dogeLottery.connect(otherAccount);
+
+      await expect(
+        nonOwnerDogeLottery.buyTicket()
+      ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
     });
 
     it("User can buy a ticket for exact price", async function () {
-      const { dogeLottery, otherAccount } = await loadFixture(
+      const { dogeLottery, dogeToken, otherAccount } = await loadFixture(
         deployDogeLotteryFixture
       );
+
+      await dogeToken.transfer(otherAccount.address, TICKET_PRICE);
+      const nonOwnerDogeToken = await dogeToken.connect(otherAccount);
+      await nonOwnerDogeToken.approve(dogeLottery.address, TICKET_PRICE);
 
       const nonOwnerDogeLottery = await dogeLottery.connect(otherAccount);
       const newTicketPrice = await nonOwnerDogeLottery.getNewTicketPrice();
@@ -183,18 +197,17 @@ describe("DogeLottery", function () {
         await nonOwnerDogeLottery.balanceOf(otherAccount.address)
       ).to.be.equal(0);
 
-      const tx = await nonOwnerDogeLottery.buyTicket({
-        value: newTicketPrice,
-      });
+      const tx = await nonOwnerDogeLottery.buyTicket();
 
-      await expect(tx).to.changeEtherBalances(
+      await expect(tx).to.changeTokenBalances(
+        dogeToken,
         [otherAccount, nonOwnerDogeLottery],
         [newTicketPrice.mul(-1), newTicketPrice]
       );
 
       const txReceipt = await tx.wait(1);
 
-      const ticketId = txReceipt.events![0].args!.tokenId.toNumber();
+      const ticketId = txReceipt.events![2].args!.tokenId.toNumber();
 
       expect(
         await nonOwnerDogeLottery.balanceOf(otherAccount.address)
@@ -222,13 +235,13 @@ describe("DogeLottery", function () {
     });
 
     it("User should provide correct choice", async () => {
-      const { dogeLottery, otherAccount } = await loadFixture(
+      const { dogeLottery, dogeToken, otherAccount } = await loadFixture(
         deployDogeLotteryFixture
       );
 
       const nonOwnerDogeLottery = dogeLottery.connect(otherAccount);
 
-      const ticketId = await buyTicket(nonOwnerDogeLottery);
+      const ticketId = await buyTicket(nonOwnerDogeLottery, dogeToken, otherAccount);
 
       const tooLowChoice = 0;
 
@@ -244,11 +257,11 @@ describe("DogeLottery", function () {
     });
 
     it("User should be an owner of ticket", async () => {
-      const { dogeLottery, otherAccount } = await loadFixture(
+      const { dogeLottery, dogeToken, otherAccount, owner } = await loadFixture(
         deployDogeLotteryFixture
       );
 
-      const ticketId = await buyTicket(dogeLottery);
+      const ticketId = await buyTicket(dogeLottery, dogeToken, owner);
 
       const correctChoice = 3;
 
@@ -260,9 +273,9 @@ describe("DogeLottery", function () {
     });
 
     it("Owner of ticket should be able to open his ticket", async () => {
-      const { dogeLottery } = await loadFixture(deployDogeLotteryFixture);
+      const { dogeLottery, dogeToken, owner } = await loadFixture(deployDogeLotteryFixture);
 
-      const ticketId = await buyTicket(dogeLottery);
+      const ticketId = await buyTicket(dogeLottery, dogeToken, owner);
       const correctChoice = 3;
 
       await dogeLottery.openTicket(ticketId, correctChoice);
@@ -283,11 +296,11 @@ describe("DogeLottery", function () {
     });
 
     it("Request cannot be called twice", async () => {
-      const { dogeLottery, vrfCoordinatorMock } = await loadFixture(
+      const { dogeLottery, vrfCoordinatorMock, dogeToken, owner } = await loadFixture(
         deployDogeLotteryFixture
       );
 
-      const ticketId = await buyTicket(dogeLottery);
+      const ticketId = await buyTicket(dogeLottery, dogeToken, owner);
       const fakeChoice = 5;
       await dogeLottery.openTicket(ticketId, fakeChoice);
 
@@ -303,13 +316,13 @@ describe("DogeLottery", function () {
     });
 
     it("Non winner choice should not increase winnings", async () => {
-      const { dogeLottery, vrfCoordinatorMock, otherAccount } = await loadFixture(
+      const { dogeLottery, dogeToken, vrfCoordinatorMock, otherAccount, owner } = await loadFixture(
         deployDogeLotteryFixture
       );
 
       const nonOwnerDogeLottery = await dogeLottery.connect(otherAccount);
 
-      const ticketId = await buyTicket(nonOwnerDogeLottery);
+      const ticketId = await buyTicket(nonOwnerDogeLottery, dogeToken, otherAccount);
       const nonWinnerChoice = 5;
       await nonOwnerDogeLottery.openTicket(ticketId, nonWinnerChoice);
 
@@ -327,23 +340,25 @@ describe("DogeLottery", function () {
     });
 
     it("Winner choice should increase winnings", async () => {
-      const { dogeLottery, vrfCoordinatorMock } = await loadFixture(
+      const { dogeLottery, dogeToken, vrfCoordinatorMock, owner, otherAccount } = await loadFixture(
         deployDogeLotteryFixture
       );
 
-      const newTicketPrice = await dogeLottery.getNewTicketPrice();
-      const ticketId = await buyTicket(dogeLottery);
-      const winnerChoice = 1;
-      await dogeLottery.openTicket(ticketId, winnerChoice);
+      const nonOwnerDogeLottery = await dogeLottery.connect(otherAccount);
+
+      const newTicketPrice = await nonOwnerDogeLottery.getNewTicketPrice();
+      const ticketId = await buyTicket(nonOwnerDogeLottery, dogeToken, otherAccount);
+      const winnerChoice = 2;
+      await nonOwnerDogeLottery.openTicket(ticketId, winnerChoice);
 
       const requestId = 1;
 
       await expect(
-        vrfCoordinatorMock.fulfillRandomWords(requestId, dogeLottery.address)
+        vrfCoordinatorMock.fulfillRandomWords(requestId, nonOwnerDogeLottery.address)
       ).not.to.be.reverted;
 
-      const winnings = await dogeLottery.winnings();
-      const prizeRatio = await dogeLottery.PRIZE_RATIO();
+      const winnings = await nonOwnerDogeLottery.winnings();
+      const prizeRatio = await nonOwnerDogeLottery.PRIZE_RATIO();
       const expectedWinnings = newTicketPrice.mul(prizeRatio);
 
       await expect(winnings.toString()).to.equal(expectedWinnings.toString());
@@ -366,13 +381,13 @@ describe("DogeLottery", function () {
     });
 
     it("User can withdraw winnings", async () => {
-      const { dogeLottery, owner, vrfCoordinatorMock } = await loadFixture(
+      const { dogeLottery, dogeToken, owner, vrfCoordinatorMock } = await loadFixture(
         deployDogeLotteryFixture
       );
 
       const newTicketPrice = await dogeLottery.getNewTicketPrice();
-      const ticketId = await buyTicket(dogeLottery);
-      const winnerChoice = 1;
+      const ticketId = await buyTicket(dogeLottery, dogeToken, owner);
+      const winnerChoice = 2;
       await dogeLottery.openTicket(ticketId, winnerChoice);
       const requestId = 1;
 
@@ -386,7 +401,8 @@ describe("DogeLottery", function () {
 
       const tx = await dogeLottery.withdrawWinnings();
 
-      await expect(tx).to.changeEtherBalances(
+      await expect(tx).to.changeTokenBalances(
+        dogeToken,
         [owner, dogeLottery],
         [expectedWinnings, expectedWinnings.mul(-1)]
       );

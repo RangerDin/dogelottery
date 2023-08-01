@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
@@ -37,6 +38,7 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     ];
 
     VRFCoordinatorV2Interface private immutable _vrfCoordinator;
+    ERC20 private immutable _dogeToken;
     uint64 private immutable _subscriptionId;
     bytes32 private immutable _gasLaneHash;
 
@@ -47,6 +49,7 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
     constructor(
         uint64 subscriptionId,
         address vrfCoordinatorAddress,
+        address dogeTokenAddress,
         bytes32 vrfGasLaneHash,
         uint256 newTicketPrice,
         string memory baseURL
@@ -55,6 +58,7 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         VRFConsumerBaseV2(vrfCoordinatorAddress)
     {
         _vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorAddress);
+        _dogeToken = ERC20(dogeTokenAddress);
         _subscriptionId = subscriptionId;
         _gasLaneHash = vrfGasLaneHash;
         _newTicketPrice = newTicketPrice;
@@ -83,10 +87,11 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         return _ticketPrices[ticketId];
     }
 
-    function buyTicket() public payable returns (uint256) {
+    function buyTicket() public returns (uint256) {
         uint256 ticketPrice = getNewTicketPrice();
 
-        require(msg.value == ticketPrice, "You should set exact price");
+        bool transferred = _dogeToken.transferFrom(msg.sender, address(this), ticketPrice);
+        require(transferred, "Token transfer failed");
 
         _ticketIdCounter.increment();
         uint256 id = _ticketIdCounter.current();
@@ -101,7 +106,7 @@ contract DogeLottery is ERC721, Ownable, VRFConsumerBaseV2 {
         address receiver,
         uint256 value
     ) private returns (bool) {
-        (bool success, ) = payable(receiver).call{value: value}("");
+        bool success = _dogeToken.transfer(receiver, value);
 
         return success;
     }
