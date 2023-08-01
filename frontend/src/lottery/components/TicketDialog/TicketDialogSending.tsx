@@ -1,8 +1,7 @@
 import styles from "./styles.module.css";
 import { isAddress } from "@ethersproject/address";
 import { ChangeEventHandler, useState } from "react";
-import TicketDialogButton from "~/lottery/components/TicketDialog/TicketDialogButton";
-import { LotteryTicket, LotteryTicketId } from "~/lottery/declarations/ticket";
+import TicketDialogButton from "./TicketDialogButton";
 import Hint from "~/ui/Hint";
 
 type Props = {

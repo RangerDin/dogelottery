@@ -1,6 +1,5 @@
 import KioskBase from "~/lottery/components/Kiosk/KioskBase/KioskBase";
 import KioskTickets from "~/lottery/components/Kiosk/KioskConnected/KioskTickets";
-import { CONNECTED_LOTTERY_PAGE_STATUS } from "~/lottery/declarations/state";
 import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
 import KioskBuyTicketButton from "~/lottery/components/Kiosk/KioskBuyTicketButton";
 import Doge from "~/lottery/components/Doge";

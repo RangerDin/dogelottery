@@ -1,20 +1,5 @@
-.buyTicketButton {
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  border: 0;
-  flex: 1;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff;
+:global(.button).buyTicketButton {
   padding: 6%;
-  background: #76b176;
   max-width: 65%;
   width: 100%;
-}
-
-
-.buyTicketButton:disabled {
-  cursor: not-allowed;
-  background: #B1B2B5;
 }

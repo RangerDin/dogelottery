@@ -1,3 +1,4 @@
+import Button from "~/ui/Button";
 import styles from "./styles.module.css";
 import { MouseEventHandler, ReactNode } from "react";
 
@@ -15,13 +16,13 @@ const TicketDialogButton = ({
   onClick
 }: Props): JSX.Element | null => {
   return (
-    <button
+    <Button
       disabled={disabled}
       className={`${className} ${styles.ticketDialogButton}`}
       onClick={onClick}
     >
       {children}
-    </button>
+    </Button>
   );
 };
 

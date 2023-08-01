@@ -1,11 +1,9 @@
-import Ticket from "~/lottery/components/Ticket";
 import {
   LotteryTicket,
   LotteryTicketStatus
 } from "~/lottery/declarations/ticket";
-import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
+import TicketDialogButton from "./TicketDialogButton";
 import styles from "./styles.module.css";
-import TicketDialogButton from "~/lottery/components/TicketDialog/TicketDialogButton";
 
 type Props = {
   ticket: LotteryTicket;

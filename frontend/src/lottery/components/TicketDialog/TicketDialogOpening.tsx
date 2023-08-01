@@ -1,6 +1,6 @@
-import TicketDialogButton from "./TicketDialogButton";
 import styles from "./styles.module.css";
 import Hint from "~/ui/Hint";
+import TicketDialogButton from "./TicketDialogButton";
 
 type Props = {
   opening: boolean;

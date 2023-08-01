@@ -36,3 +36,21 @@ button {
 ::-webkit-scrollbar-thumb:hover {
   background: #555555;
 }
+
+.button {
+  border: 0;
+  flex: 1;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #76b176;
+  transition: all 0.2s ease-in-out;
+  padding: 18px 30px;
+  max-width: 200px;
+}
+
+.button:disabled {
+  cursor: initial;
+  background: #b1b2b5;
+}

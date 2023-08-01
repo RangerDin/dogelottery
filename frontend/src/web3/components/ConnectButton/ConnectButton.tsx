@@ -1,5 +1,6 @@
-import styles from "./styles.module.css";
+import Button from "~/ui/Button";
 import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
+import styles from "./styled.module.css";
 
 type Props = {
   connected: boolean;
@@ -23,13 +24,13 @@ const ConnectButton = ({
   };
 
   return (
-    <button
-      className={`${className} ${styles.button}`}
+    <Button
+      className={`${className} ${styles.connectButton}`}
       disabled={disabled}
       onClick={handlerClick}
     >
       {connected ? "Disconnect" : "Connect"}
-    </button>
+    </Button>
   );
 };
 

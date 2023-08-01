@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import styles from "./styles.module.css";
+import Button from "~/ui/Button";
 
 type Props = {
   disabled?: boolean;
@@ -10,14 +11,14 @@ type Props = {
 const KioskBuyTicketButton = forwardRef<HTMLButtonElement, Props>(
   ({ disabled, className, onClick }: Props, ref): JSX.Element => {
     return (
-      <button
+      <Button
         ref={ref}
         disabled={disabled}
         className={`${styles.buyTicketButton} ${className}`}
         onClick={onClick}
       >
         Buy ticket
-      </button>
+      </Button>
     );
   }
 );
