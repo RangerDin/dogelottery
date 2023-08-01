@@ -13,14 +13,31 @@ export enum CONNECTED_LOTTERY_PAGE_STATUS {
 
 export type MutableLotteryPageState = {
   address?: string;
-  transition: {
-    connection: MutableLotteryPageTransitionState;
-    ticketPreparing: MutableLotteryPageTransitionState;
-  };
+  connection: MutableLotteryPageTransitionState;
+  ticketPreparing: MutableLotteryPageProgressState;
+  ticketPurchase: MutableLotteryPageTicketPurchaseState;
   tickets: LotteryTicket[];
 };
 
-export type MutableLotteryPageTransitionState = {
-  in: boolean;
+export type MutableLotteryPageProgressState = {
   inProgress: boolean;
 };
+
+export type MutableLotteryPageTransitionState =
+  MutableLotteryPageProgressState & {
+    in: boolean;
+  };
+
+export type MutableLotteryPageTicketPurchaseState =
+  | {
+      inProgress: true;
+      status: MutableLotteryPageTicketPurchaseStatus;
+    }
+  | {
+      inProgress: false;
+    };
+
+export enum MutableLotteryPageTicketPurchaseStatus {
+  setAllowance = "setAllowance",
+  ticketPurchasing = "ticketPurchasing"
+}

@@ -28,6 +28,7 @@ const Kiosk = ({ className, state, handlers }: Props): JSX.Element => {
               <TicketSelectorDialog
                 {...state.ticketSelectionDialog.dialogProps}
                 {...state.ticketSelectionDialog.payload}
+                ticketPurchaseState={state.ticketPurchase}
                 onClickTicket={handlers.buyAndSelectNewTicket}
               />
             )}

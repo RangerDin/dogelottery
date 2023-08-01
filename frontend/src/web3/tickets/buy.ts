@@ -8,7 +8,8 @@ import { switchEthereumChain } from "../utils/switchEthereumChain";
 import { DogeTokenContract } from "~/web3/dogeToken/contract";
 
 export const buyLotteryTicket = async (
-  provider: Web3Provider
+  provider: Web3Provider,
+  onApproved?: () => void
 ): Promise<LotteryTicket> => {
   const signer = provider.getSigner();
 
@@ -26,6 +27,8 @@ export const buyLotteryTicket = async (
   );
 
   await tx.wait(1);
+
+  onApproved?.();
 
   const buyTransaction = await lotteryContract.buyTicket();
 

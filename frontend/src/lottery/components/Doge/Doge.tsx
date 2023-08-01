@@ -33,7 +33,7 @@ const Doge = ({ state }: Props): JSX.Element => {
         appear
         in={
           state.connectionStatus === LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
-          state.transition.connection.in
+          state.connection.in
         }
         classNames={CLASSES}
         timeout={DOGE_APPEAR_ANIMATION_TIMEOUT}

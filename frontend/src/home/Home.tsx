@@ -16,7 +16,7 @@ export const Home = () => {
         {state.connectionStatus ===
           LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED && (
           <Fade
-            in={state.transition.connection.in}
+            in={state.connection.in}
             onEntered={handlers.onConnected}
             onExited={handlers.onDisconnected}
             mountOnEnter

@@ -2,7 +2,8 @@ import TicketDialogOpening from "~/lottery/components/TicketDialog/TicketDialogO
 import TicketDialogShowing from "~/lottery/components/TicketDialog/TicketDialogShowing";
 import {
   LotteryTicket,
-  LotteryTicketSlot
+  LotteryTicketSlot,
+  LotteryTicketStatus
 } from "~/lottery/declarations/ticket";
 import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
 import Dialog from "~/ui/Dialog";
@@ -55,9 +56,9 @@ const TicketDialog = ({
   };
 
   const disabledTicket =
+    ticket.status === LotteryTicketStatus.OPENING ||
     status === TICKET_DIALOG_STATUS.VIEW_TICKET ||
     status === TICKET_DIALOG_STATUS.SEND_TICKET;
-  const opening = status === TICKET_DIALOG_STATUS.OPENING_TICKET;
 
   return (
     <Dialog {...dialogProps} onClose={onClose}>
@@ -76,16 +77,16 @@ const TicketDialog = ({
           />
         )}
         {(status === TICKET_DIALOG_STATUS.OPEN_TICKET ||
-          status === TICKET_DIALOG_STATUS.OPENING_TICKET) && (
+          ticket.status === LotteryTicketStatus.OPENING) && (
           <TicketDialogOpening
             onClickCancel={handleClickCancel}
-            opening={opening}
+            opening={ticket.status === LotteryTicketStatus.OPENING}
           />
         )}
         {(status === TICKET_DIALOG_STATUS.SEND_TICKET ||
-          status === TICKET_DIALOG_STATUS.SENDING_TICKET) && (
+          ticket.status === LotteryTicketStatus.SENDING) && (
           <TicketDialogSending
-            sending={status === TICKET_DIALOG_STATUS.SENDING_TICKET}
+            sending={ticket.status === LotteryTicketStatus.SENDING}
             onClickCancel={handleClickCancel}
             onClickSendTicket={handleClickSendTicket}
           />

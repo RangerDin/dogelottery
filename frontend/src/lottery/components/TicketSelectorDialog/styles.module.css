@@ -19,10 +19,14 @@
   transition: opacity 0.3s;
 }
 
-.ticket:hover {
+.tickets.ticketsBlocked .ticket {
+  cursor: initial;
+}
+
+.tickets:not(.ticketsBlocked) .ticket:hover {
   opacity: 0.8;
 }
 
-.ticket:active {
+.tickets:not(.ticketsBlocked) .ticket:active {
   opacity: 0.7;
 }

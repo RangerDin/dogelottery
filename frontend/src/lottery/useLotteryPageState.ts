@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   CONNECTED_LOTTERY_PAGE_STATUS,
-  MutableLotteryPageState
+  MutableLotteryPageState,
+  MutableLotteryPageTicketPurchaseStatus
 } from "~/lottery/declarations/state";
 import {
   LotteryTicket,
@@ -53,15 +54,15 @@ const HIDE_DIALOG_DELAY = 300;
 
 const INITIAL_STATE: MutableLotteryPageState = {
   tickets: [],
-  transition: {
-    ticketPreparing: {
-      in: false,
-      inProgress: false
-    },
-    connection: {
-      inProgress: false,
-      in: false
-    }
+  ticketPreparing: {
+    inProgress: false
+  },
+  connection: {
+    inProgress: false,
+    in: false
+  },
+  ticketPurchase: {
+    inProgress: false
   }
 };
 
@@ -91,24 +92,18 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       .then(() => {
         setMutableState(state => ({
           ...state,
-          transition: {
-            ...state.transition,
-            connection: {
-              in: true,
-              inProgress: false
-            }
+          connection: {
+            in: true,
+            inProgress: false
           }
         }));
       })
       .catch(() => {
         setMutableState(state => ({
           ...state,
-          transition: {
-            ...state.transition,
-            connection: {
-              in: false,
-              inProgress: false
-            }
+          connection: {
+            in: false,
+            inProgress: false
           }
         }));
         console.debug("Failed to connect eagerly to metamask");
@@ -131,7 +126,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       };
     }
 
-    if (!isActive && !mutableState.transition.connection.inProgress) {
+    if (!isActive && !mutableState.connection.inProgress) {
       return {
         connectionStatus: LOTTERY_PAGE_CONNECTION_STATUS.DISCONNECTED
       };
@@ -159,6 +154,13 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   ]);
 
   const prepareNewTickets = async () => {
+    setMutableState(state => ({
+      ...state,
+      ticketPreparing: {
+        inProgress: true
+      }
+    }));
+
     const ticketsToChoose = await generateLotteryTickets(
       LOTTERY_TICKETS_TO_GENERATE
     );
@@ -166,6 +168,12 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     ticketSelectionDialog.openDialog({
       ticketsToChoose
     });
+    setMutableState(state => ({
+      ...state,
+      ticketPreparing: {
+        inProgress: false
+      }
+    }));
   };
 
   const selectTicket = (ticketId: LotteryTicketId) => {
@@ -179,15 +187,32 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       throw new Error("There is no provider");
     }
 
-    const activeTicket = await buyLotteryTicket(provider);
+    setMutableState(state => ({
+      ...state,
+      ticketPurchase: {
+        inProgress: true,
+        status: MutableLotteryPageTicketPurchaseStatus.setAllowance
+      }
+    }));
+
+    const activeTicket = await buyLotteryTicket(provider, () => {
+      setMutableState(state => ({
+        ...state,
+        ticketPurchase: {
+          inProgress: true,
+          status: MutableLotteryPageTicketPurchaseStatus.ticketPurchasing
+        }
+      }));
+    });
 
     setMutableState(state => {
       return {
         ...state,
         status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
         tickets: [...state.tickets, activeTicket],
-        activeTicketId: activeTicket.id,
-        openSlot: null
+        ticketPurchase: {
+          inProgress: false
+        }
       };
     });
 
@@ -210,6 +235,20 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     if (!mutableState.address) {
       throw new Error("There is no address");
     }
+
+    setMutableState(state => ({
+      ...state,
+      tickets: state.tickets.map(ticket => {
+        if (ticket.id !== activeTicketId) {
+          return ticket;
+        }
+
+        return {
+          ...ticket,
+          status: LotteryTicketStatus.SENDING
+        };
+      })
+    }));
 
     await sendLotteryTicket({
       ticketId: activeTicketId,
@@ -295,13 +334,10 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     await metamask.activate();
 
     setMutableState(state => ({
-      tickets: [],
-      transition: {
-        ...state.transition,
-        connection: {
-          inProgress: true,
-          in: true
-        }
+      ...state,
+      connection: {
+        inProgress: true,
+        in: true
       }
     }));
   };
@@ -310,12 +346,9 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     setMutableState(state => {
       return {
         ...state,
-        transition: {
-          ...state.transition,
-          connection: {
-            inProgress: false,
-            in: true
-          }
+        connection: {
+          inProgress: false,
+          in: true
         }
       };
     });
@@ -324,12 +357,9 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   const disconnect = async () => {
     setMutableState(state => ({
       ...state,
-      transition: {
-        ...state.transition,
-        connection: {
-          inProgress: true,
-          in: false
-        }
+      connection: {
+        inProgress: true,
+        in: false
       }
     }));
 
@@ -339,12 +369,10 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   const onDisconnected = async () => {
     setMutableState(state => ({
       ...state,
-      transition: {
-        ...state.transition,
-        connection: {
-          inProgress: false,
-          in: false
-        }
+      tickets: [],
+      connection: {
+        inProgress: false,
+        in: false
       }
     }));
   };

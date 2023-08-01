@@ -31,8 +31,7 @@ const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
         <Fade
           in={
             state.connectionStatus ===
-              LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
-            state.transition.connection.in
+              LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED && state.connection.in
           }
           mountOnEnter
           unmountOnExit
@@ -41,7 +40,7 @@ const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
             disabled={
               state.connectionStatus ===
                 LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED &&
-              state.transition.ticketPreparing.in
+              state.ticketPreparing.inProgress
             }
             onClick={handlers.prepareNewTickets}
           />
