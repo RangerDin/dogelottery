@@ -24,6 +24,8 @@ import {
 } from "~/lottery/declarations/page";
 import { getHue } from "~/web3/tickets/getHue";
 import { SpecificTicketDialogProps } from "~/lottery/components/TicketDialog/declarations";
+import wrapWeb3Errors from "~/web3/utils/wrapWeb3Errors";
+import useWeb3ErrorsHandler from "~/web3/errors/useWeb3ErrorsHandler";
 
 const { useIsActive, useIsActivating, useAccount, useProvider } = hooks;
 
@@ -76,6 +78,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   const isActivating = useIsActivating();
   const address = useAccount();
   const provider = useProvider();
+  const handleWeb3Error = useWeb3ErrorsHandler();
 
   if (address && mutableState.address !== address) {
     setMutableState(state => ({
@@ -182,165 +185,226 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     });
   };
 
-  const buyAndSelectNewTicket = async () => {
-    if (!provider) {
-      throw new Error("There is no provider");
-    }
-
-    setMutableState(state => ({
-      ...state,
-      ticketPurchase: {
-        inProgress: true,
-        status: MutableLotteryPageTicketPurchaseStatus.setAllowance
+  const buyAndSelectNewTicket = async () =>
+    handleWeb3Error(async () => {
+      if (!provider) {
+        throw new Error("There is no provider");
       }
-    }));
 
-    const activeTicket = await buyLotteryTicket(provider, () => {
       setMutableState(state => ({
         ...state,
         ticketPurchase: {
           inProgress: true,
-          status: MutableLotteryPageTicketPurchaseStatus.ticketPurchasing
+          status: MutableLotteryPageTicketPurchaseStatus.setAllowance
         }
       }));
-    });
 
-    setMutableState(state => {
-      return {
-        ...state,
-        status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
-        tickets: [...state.tickets, activeTicket],
-        ticketPurchase: {
-          inProgress: false
-        }
-      };
-    });
+      try {
+        const activeTicket = await wrapWeb3Errors(() =>
+          buyLotteryTicket(provider, () => {
+            setMutableState(state => ({
+              ...state,
+              ticketPurchase: {
+                inProgress: true,
+                status: MutableLotteryPageTicketPurchaseStatus.ticketPurchasing
+              }
+            }));
+          })
+        );
 
-    setTimeout(() => {
-      ticketSelectionDialog.dialogProps.onClose();
-    }, HIDE_DIALOG_DELAY);
-    ticketDialog.openDialog({
-      ticketId: activeTicket.id
+        setMutableState(state => {
+          return {
+            ...state,
+            status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
+            tickets: [...state.tickets, activeTicket],
+            ticketPurchase: {
+              inProgress: false
+            }
+          };
+        });
+
+        setTimeout(() => {
+          ticketSelectionDialog.dialogProps.onClose();
+        }, HIDE_DIALOG_DELAY);
+        ticketDialog.openDialog({
+          ticketId: activeTicket.id
+        });
+      } catch (error) {
+        setMutableState(state => ({
+          ...state,
+          ticketPurchase: {
+            inProgress: false
+          }
+        }));
+        ticketSelectionDialog.dialogProps.onClose();
+
+        throw error;
+      }
     });
-  };
 
   const sendTicket = async (
     activeTicketId: LotteryTicketId,
     newOwnerAddress: string
-  ) => {
-    if (!provider) {
-      throw new Error("There is no provider");
-    }
+  ) =>
+    handleWeb3Error(async () => {
+      if (!provider) {
+        throw new Error("There is no provider");
+      }
 
-    if (!mutableState.address) {
-      throw new Error("There is no address");
-    }
+      if (!mutableState.address) {
+        throw new Error("There is no address");
+      }
 
-    setMutableState(state => ({
-      ...state,
-      tickets: state.tickets.map(ticket => {
-        if (ticket.id !== activeTicketId) {
-          return ticket;
-        }
+      setMutableState(state => ({
+        ...state,
+        tickets: state.tickets.map(ticket => {
+          if (ticket.id !== activeTicketId) {
+            return ticket;
+          }
 
-        return {
-          ...ticket,
-          status: LotteryTicketStatus.SENDING
-        };
-      })
-    }));
+          return {
+            ...ticket,
+            sending: true
+          };
+        })
+      }));
 
-    await sendLotteryTicket({
-      ticketId: activeTicketId,
-      currentOwnerAddress: mutableState.address,
-      newOwnerAddress,
-      provider
+      const currentOwnerAddress = mutableState.address;
+
+      try {
+        await wrapWeb3Errors(() =>
+          sendLotteryTicket({
+            ticketId: activeTicketId,
+            currentOwnerAddress,
+            newOwnerAddress,
+            provider
+          })
+        );
+
+        setMutableState(state => ({
+          ...state,
+          tickets: state.tickets.filter(({ id }) => id !== activeTicketId)
+        }));
+      } catch (error) {
+        setMutableState(state => ({
+          ...state,
+          tickets: state.tickets.map(ticket => {
+            if (ticket.status === LotteryTicketStatus.SENDING_NEW) {
+              return {
+                ...ticket,
+                status: LotteryTicketStatus.NEW
+              };
+            }
+
+            if (ticket.status === LotteryTicketStatus.SENDING_OPENED) {
+              return {
+                ...ticket,
+                status: LotteryTicketStatus.OPENED
+              };
+            }
+
+            return ticket;
+          })
+        }));
+
+        throw error;
+      }
     });
-
-    setMutableState(state => ({
-      ...state,
-      tickets: state.tickets.filter(({ id }) => id !== activeTicketId)
-    }));
-  };
 
   const openTicket = async (
     activeTicketId: LotteryTicketId,
     openSlot: LotteryTicketSlot
-  ) => {
-    if (!provider) {
-      throw new Error("There is no provider");
-    }
+  ) =>
+    handleWeb3Error(async () => {
+      if (!provider) {
+        throw new Error("There is no provider");
+      }
 
-    setMutableState(state => {
-      const ticketsWithOpeningTicket = [...state.tickets];
-      const activeTicketIndex = ticketsWithOpeningTicket.findIndex(
-        ({ id }) => id === activeTicketId
+      setMutableState(state => {
+        return {
+          ...state,
+          tickets: state.tickets.map(ticket => {
+            if (ticket.id !== activeTicketId) {
+              return ticket;
+            }
+
+            const openingTicket: LotteryTicket = {
+              ...ticket,
+              status: LotteryTicketStatus.OPENING,
+              openedSlot: openSlot
+            };
+
+            return openingTicket;
+          })
+        };
+      });
+
+      let winningSlot: LotteryTicketSlot;
+
+      try {
+        winningSlot = await wrapWeb3Errors(() =>
+          openLotteryTicket(provider, activeTicketId, openSlot)
+        );
+      } catch (error) {
+        setMutableState(state => {
+          return {
+            ...state,
+            tickets: state.tickets.map(ticket => {
+              if (ticket.id !== activeTicketId) {
+                return ticket;
+              }
+
+              const openingTicket: LotteryTicket = {
+                id: ticket.id,
+                status: LotteryTicketStatus.NEW
+              };
+
+              return openingTicket;
+            })
+          };
+        });
+
+        throw error;
+      }
+
+      const ticketHue = await wrapWeb3Errors(() =>
+        getHue(provider, activeTicketId)
       );
 
-      if (activeTicketIndex === -1) {
-        return state;
-      }
+      setMutableState(state => {
+        return {
+          ...state,
+          tickets: state.tickets.map(ticket => {
+            if (ticket.id !== activeTicketId) {
+              return ticket;
+            }
 
-      const openingTicket: LotteryTicket = {
-        ...ticketsWithOpeningTicket[activeTicketIndex],
-        status: LotteryTicketStatus.OPENING,
-        openedSlot: openSlot
-      };
-      ticketsWithOpeningTicket[activeTicketIndex] = openingTicket;
+            const openedTicket: LotteryTicket = {
+              ...ticket,
+              status: LotteryTicketStatus.OPENED,
+              winningSlot,
+              ticketHue,
+              openedSlot: openSlot
+            };
 
-      return {
-        ...state,
-        tickets: ticketsWithOpeningTicket
-      };
+            return openedTicket;
+          })
+        };
+      });
     });
 
-    const winningSlot = await openLotteryTicket(
-      provider,
-      activeTicketId,
-      openSlot
-    );
+  const connect = async () =>
+    handleWeb3Error(async () => {
+      await wrapWeb3Errors(() => metamask.activate());
 
-    const ticketHue = await getHue(provider, activeTicketId);
-
-    setMutableState(state => {
-      const ticketsWithOpenedTicket = [...state.tickets];
-      const activeTicketIndex = ticketsWithOpenedTicket.findIndex(
-        ({ id }) => id === activeTicketId
-      );
-
-      if (activeTicketIndex === -1) {
-        return state;
-      }
-
-      const activeTicket = ticketsWithOpenedTicket[activeTicketIndex];
-
-      const openedTicket: LotteryTicket = {
-        ...activeTicket,
-        status: LotteryTicketStatus.OPENED,
-        winningSlot,
-        ticketHue,
-        openedSlot: openSlot
-      };
-      ticketsWithOpenedTicket[activeTicketIndex] = openedTicket;
-
-      return {
+      setMutableState(state => ({
         ...state,
-        tickets: ticketsWithOpenedTicket
-      };
+        connection: {
+          inProgress: true,
+          in: true
+        }
+      }));
     });
-  };
-
-  const connect = async () => {
-    await metamask.activate();
-
-    setMutableState(state => ({
-      ...state,
-      connection: {
-        inProgress: true,
-        in: true
-      }
-    }));
-  };
 
   const onConnected = () => {
     setMutableState(state => {
@@ -354,17 +418,18 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     });
   };
 
-  const disconnect = async () => {
-    setMutableState(state => ({
-      ...state,
-      connection: {
-        inProgress: true,
-        in: false
-      }
-    }));
+  const disconnect = async () =>
+    handleWeb3Error(async () => {
+      setMutableState(state => ({
+        ...state,
+        connection: {
+          inProgress: true,
+          in: false
+        }
+      }));
 
-    await metamask.resetState();
-  };
+      await wrapWeb3Errors(() => metamask.resetState());
+    });
 
   const onDisconnected = async () => {
     setMutableState(state => ({

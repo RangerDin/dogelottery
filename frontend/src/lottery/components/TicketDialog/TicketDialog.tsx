@@ -60,6 +60,10 @@ const TicketDialog = ({
     status === TICKET_DIALOG_STATUS.VIEW_TICKET ||
     status === TICKET_DIALOG_STATUS.SEND_TICKET;
 
+  const sending =
+    ticket.status === LotteryTicketStatus.SENDING_NEW ||
+    ticket.status === LotteryTicketStatus.SENDING_OPENED;
+
   return (
     <Dialog {...dialogProps} onClose={onClose}>
       <div className={styles.ticketDialogContent}>
@@ -83,10 +87,9 @@ const TicketDialog = ({
             opening={ticket.status === LotteryTicketStatus.OPENING}
           />
         )}
-        {(status === TICKET_DIALOG_STATUS.SEND_TICKET ||
-          ticket.status === LotteryTicketStatus.SENDING) && (
+        {(status === TICKET_DIALOG_STATUS.SEND_TICKET || sending) && (
           <TicketDialogSending
-            sending={ticket.status === LotteryTicketStatus.SENDING}
+            sending={sending}
             onClickCancel={handleClickCancel}
             onClickSendTicket={handleClickSendTicket}
           />
