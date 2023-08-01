@@ -22,15 +22,19 @@ const TicketSelectorDialog = ({
   ...dialogProps
 }: Props): JSX.Element => {
   const handleClickTicket = (ticketId: LotteryTicketId) => () => {
-    if (ticketPurchaseState.inProgress) {
-      return;
+    if (!ticketPurchaseState.inProgress) {
+      onClickTicket(ticketId);
     }
+  };
 
-    onClickTicket(ticketId);
+  const handleClose = () => {
+    if (!ticketPurchaseState.inProgress) {
+      dialogProps.onClose();
+    }
   };
 
   return (
-    <Dialog {...dialogProps}>
+    <Dialog {...dialogProps} onClose={handleClose}>
       <ul
         className={`${styles.tickets} ${
           ticketPurchaseState.inProgress && styles.ticketsBlocked

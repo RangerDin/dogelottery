@@ -32,6 +32,16 @@ const TicketDialog = ({
 }: Props): JSX.Element | null => {
   const [status, setStatus] = useState(TICKET_DIALOG_STATUS.VIEW_TICKET);
 
+  const sending =
+    ticket.status === LotteryTicketStatus.SENDING_NEW ||
+    ticket.status === LotteryTicketStatus.SENDING_OPENED;
+  const opening = ticket.status === LotteryTicketStatus.OPENING;
+  const operationInProgress = sending || opening;
+  const disabledTicket =
+    operationInProgress ||
+    status === TICKET_DIALOG_STATUS.VIEW_TICKET ||
+    status === TICKET_DIALOG_STATUS.SEND_TICKET;
+
   const handleClickSlot = async (slot: LotteryTicketSlot) => {
     await handlers.openTicket(ticketId, slot);
 
@@ -50,22 +60,19 @@ const TicketDialog = ({
     setStatus(TICKET_DIALOG_STATUS.VIEW_TICKET);
   };
 
-  const handleClickSendTicket = async (address: string): Promise<void> => {
-    await handlers.sendTicket(ticket.id, address);
-    onClose();
+  const handleClose = () => {
+    if (!operationInProgress) {
+      onClose();
+    }
   };
 
-  const disabledTicket =
-    ticket.status === LotteryTicketStatus.OPENING ||
-    status === TICKET_DIALOG_STATUS.VIEW_TICKET ||
-    status === TICKET_DIALOG_STATUS.SEND_TICKET;
-
-  const sending =
-    ticket.status === LotteryTicketStatus.SENDING_NEW ||
-    ticket.status === LotteryTicketStatus.SENDING_OPENED;
+  const handleClickSendTicket = async (address: string): Promise<void> => {
+    await handlers.sendTicket(ticket.id, address);
+    handleClose();
+  };
 
   return (
-    <Dialog {...dialogProps} onClose={onClose}>
+    <Dialog {...dialogProps} onClose={handleClose}>
       <div className={styles.ticketDialogContent}>
         <Ticket
           className={styles.ticketDialogTicket}
@@ -80,14 +87,13 @@ const TicketDialog = ({
             onOpenTicketView={handleOpenTicketView}
           />
         )}
-        {(status === TICKET_DIALOG_STATUS.OPEN_TICKET ||
-          ticket.status === LotteryTicketStatus.OPENING) && (
+        {status === TICKET_DIALOG_STATUS.OPEN_TICKET && (
           <TicketDialogOpening
             onClickCancel={handleClickCancel}
-            opening={ticket.status === LotteryTicketStatus.OPENING}
+            opening={operationInProgress}
           />
         )}
-        {(status === TICKET_DIALOG_STATUS.SEND_TICKET || sending) && (
+        {status === TICKET_DIALOG_STATUS.SEND_TICKET && (
           <TicketDialogSending
             sending={sending}
             onClickCancel={handleClickCancel}

@@ -1,6 +1,7 @@
 export type LotteryTicketId = string;
 
 export enum LotteryTicketStatus {
+  PURCHASING = "PURCHASING",
   NEW = "NEW",
   OPENING = "OPENING",
   OPENED = "OPENED",
@@ -13,7 +14,10 @@ export type LotteryTicket = {
   id: LotteryTicketId;
 } & (
   | {
-      status: LotteryTicketStatus.NEW | LotteryTicketStatus.SENDING_NEW;
+      status:
+        | LotteryTicketStatus.NEW
+        | LotteryTicketStatus.SENDING_NEW
+        | LotteryTicketStatus.PURCHASING;
     }
   | {
       status: LotteryTicketStatus.OPENING;

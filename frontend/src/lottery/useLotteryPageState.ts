@@ -262,10 +262,21 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
             return ticket;
           }
 
-          return {
-            ...ticket,
-            sending: true
-          };
+          if (ticket.status === LotteryTicketStatus.NEW) {
+            return {
+              ...ticket,
+              status: LotteryTicketStatus.SENDING_NEW
+            };
+          }
+
+          if (ticket.status === LotteryTicketStatus.OPENED) {
+            return {
+              ...ticket,
+              status: LotteryTicketStatus.SENDING_OPENED
+            };
+          }
+
+          return ticket;
         })
       }));
 
