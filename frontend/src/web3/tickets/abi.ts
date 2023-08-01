@@ -12,6 +12,11 @@ export const LOTTERY_CONTRACT_ABI = [
         type: "address"
       },
       {
+        internalType: "address",
+        name: "dogeTokenAddress",
+        type: "address"
+      },
+      {
         internalType: "bytes32",
         name: "vrfGasLaneHash",
         type: "bytes32"
@@ -265,7 +270,7 @@ export const LOTTERY_CONTRACT_ABI = [
         type: "uint256"
       }
     ],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
     type: "function"
   },
   {

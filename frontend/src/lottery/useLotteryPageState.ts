@@ -238,7 +238,9 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
 
   const selectTicket = (ticketId: LotteryTicketId) => {
     setMutableState(state => {
-      if (state.status !== CONNECTED_LOTTERY_PAGE_STATUS.SELECTING_TICKET) {
+      if (
+        state.status !== CONNECTED_LOTTERY_PAGE_STATUS.OFFERING_TO_BUY_TICKET
+      ) {
         return state;
       }
 

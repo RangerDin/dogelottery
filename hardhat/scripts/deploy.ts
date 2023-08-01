@@ -96,10 +96,13 @@ async function main() {
 
   await dogeLottery.deployed();
 
-  const ownerAddress = await dogeLottery.owner();
+  const lotteryOwnerAddress = await dogeLottery.owner();
 
   console.log(
-    `DogeLottery contract with ${ownerAddress} owner was deployed to ${dogeLottery.address}`
+    `
+      DogeLottery contract was deployed to ${dogeLottery.address}. (Owner: ${lotteryOwnerAddress})\n
+      DogeToken was deployed to ${dogeTokenAddress}.
+    `
   );
 }
 

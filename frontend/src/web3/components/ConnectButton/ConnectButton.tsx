@@ -1,5 +1,3 @@
-import { useCallback } from "react";
-import { metamask } from "~/web3/connectors/metamask";
 import styles from "./styles.module.css";
 import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
 
