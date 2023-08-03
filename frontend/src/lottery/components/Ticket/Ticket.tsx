@@ -52,7 +52,6 @@ const Ticket = ({
           <TicketSlot
             key={index}
             slot={index}
-            status={ticket.status}
             disabled={disabled || ticket.status !== LotteryTicketStatus.NEW}
             opened={
               ticket.status === LotteryTicketStatus.OPENED &&

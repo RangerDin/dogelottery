@@ -10,10 +10,6 @@ type Props = {
   slot: LotteryTicketSlot;
   opened: boolean;
   winning: boolean;
-  status:
-    | LotteryTicketStatus.OPENED
-    | LotteryTicketStatus.OPENING
-    | LotteryTicketStatus.NEW;
   disabled?: boolean;
   onClick?: () => void;
 };

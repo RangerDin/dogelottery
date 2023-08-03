@@ -1,5 +1,3 @@
-import TicketDialogOpening from "~/lottery/components/TicketDialog/TicketDialogOpening";
-import TicketDialogShowing from "~/lottery/components/TicketDialog/TicketDialogShowing";
 import {
   LotteryTicket,
   LotteryTicketSlot,
@@ -8,14 +6,19 @@ import {
 import { LotteryPageHandlers } from "~/lottery/useLotteryPageState";
 import Dialog from "~/ui/Dialog";
 import styles from "./styles.module.css";
-import TicketDialogSending from "~/lottery/components/TicketDialog/TicketDialogSending";
 import {
   SpecificTicketDialogProps,
   TICKET_DIALOG_STATUS
 } from "./declarations";
 import { DialogProps } from "~/ui/Dialog/useDialog";
 import Ticket from "~/lottery/components/Ticket";
-import { useState } from "react";
+import { ChangeEventHandler, useState } from "react";
+import { isAddress } from "@ethersproject/address";
+
+import TicketDialogInput from "./TicketDialogInput";
+import TicketDialogSending from "./TicketDialogSending";
+import TicketDialogOpening from "./TicketDialogOpening";
+import TicketDialogShowing from "./TicketDialogShowing";
 
 type Props = DialogProps &
   SpecificTicketDialogProps & {
@@ -31,6 +34,7 @@ const TicketDialog = ({
   ...dialogProps
 }: Props): JSX.Element | null => {
   const [status, setStatus] = useState(TICKET_DIALOG_STATUS.VIEW_TICKET);
+  const [address, setAddress] = useState("");
 
   const sending =
     ticket.status === LotteryTicketStatus.SENDING_NEW ||
@@ -66,9 +70,15 @@ const TicketDialog = ({
     }
   };
 
-  const handleClickSendTicket = async (address: string): Promise<void> => {
+  const handleClickSendTicket = async (): Promise<void> => {
     await handlers.sendTicket(ticket.id, address);
     handleClose();
+  };
+
+  const handleChangeAddress: ChangeEventHandler<HTMLInputElement> = event => {
+    const address = event.target.value;
+
+    setAddress(address);
   };
 
   return (
@@ -79,6 +89,11 @@ const TicketDialog = ({
           ticket={ticket}
           disabled={disabledTicket}
           onClickSlot={handleClickSlot}
+        />
+        <TicketDialogInput
+          in={status === TICKET_DIALOG_STATUS.SEND_TICKET}
+          value={address}
+          onChange={handleChangeAddress}
         />
         {status === TICKET_DIALOG_STATUS.VIEW_TICKET && (
           <TicketDialogShowing
@@ -96,6 +111,7 @@ const TicketDialog = ({
         {status === TICKET_DIALOG_STATUS.SEND_TICKET && (
           <TicketDialogSending
             sending={sending}
+            disabledSending={!isAddress(address)}
             onClickCancel={handleClickCancel}
             onClickSendTicket={handleClickSendTicket}
           />

@@ -1,0 +1,36 @@
+.slideUp {
+  opacity: 0;
+  margin-top: -57px;
+}
+
+.appear {
+  opacity: 0;
+  margin-top: -57px;
+}
+
+.appear.appearActive {
+  opacity: 1;
+  margin-top: 0;
+  transition: opacity 200ms, margin-top 500ms;
+}
+
+.appearDone {
+  margin-top: 0;
+  opacity: 1;
+}
+
+.exit {
+  margin-top: 0;
+  opacity: 1;
+}
+
+.exit.exitActive {
+  opacity: 0;
+  margin-top: -57px;
+  transition: opacity 200ms, margin-top 500ms;
+}
+
+.exitDone {
+  opacity: 0;
+  margin-top: -57px;
+}
