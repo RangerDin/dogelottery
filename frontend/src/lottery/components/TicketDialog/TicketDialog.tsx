@@ -88,6 +88,7 @@ const TicketDialog = ({
           className={styles.ticketDialogTicket}
           ticket={ticket}
           disabled={disabledTicket}
+          highlightedSlots={status === TICKET_DIALOG_STATUS.OPEN_TICKET}
           onClickSlot={handleClickSlot}
         />
         <TicketDialogInput

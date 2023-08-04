@@ -10,12 +10,14 @@ type Props = {
   slot: LotteryTicketSlot;
   opened: boolean;
   winning: boolean;
+  highlighted?: boolean;
   disabled?: boolean;
   onClick?: () => void;
 };
 
 const TicketSlot = ({
   opened,
+  highlighted,
   winning,
   disabled,
   onClick
@@ -24,7 +26,7 @@ const TicketSlot = ({
     <button
       className={`${styles.ticketSlot} ${
         opened ? styles.ticketSlotOpened : ""
-      }`}
+      } ${highlighted ? styles.ticketSlotHighlighted : ""}`}
       disabled={disabled}
       onClick={onClick}
     >

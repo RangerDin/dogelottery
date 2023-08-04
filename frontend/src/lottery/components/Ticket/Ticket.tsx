@@ -11,6 +11,7 @@ import styles from "./styles.module.css";
 type Props = {
   ticket: LotteryTicket;
   disabled?: boolean;
+  highlightedSlots?: boolean;
   className?: string;
   onClick?: () => void;
   onClickSlot?: (slot: LotteryTicketSlot) => void;
@@ -19,6 +20,7 @@ type Props = {
 const Ticket = ({
   ticket,
   disabled,
+  highlightedSlots,
   className,
   onClick,
   onClickSlot
@@ -52,6 +54,7 @@ const Ticket = ({
           <TicketSlot
             key={index}
             slot={index}
+            highlighted={highlightedSlots}
             disabled={disabled || ticket.status !== LotteryTicketStatus.NEW}
             opened={
               ticket.status === LotteryTicketStatus.OPENED &&

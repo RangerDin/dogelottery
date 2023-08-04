@@ -64,6 +64,10 @@
   background-color: #ffffff;
 }
 
+.ticketSlotHighlighted:not(:disabled) {
+  border-color: #c7c700;
+}
+
 .ticketSlot:hover:not(:disabled) {
   border-color: #ffff00;
 }
