@@ -24,8 +24,8 @@ import {
 } from "~/lottery/declarations/page";
 import { getHue } from "~/web3/tickets/getHue";
 import { SpecificTicketDialogProps } from "~/lottery/components/TicketDialog/declarations";
-import wrapWeb3Errors from "~/web3/utils/wrapWeb3Errors";
 import useWeb3ErrorsHandler from "~/web3/errors/useWeb3ErrorsHandler";
+import wrapWeb3Errors from "~/web3/errors/wrapWeb3Errors";
 
 const { useIsActive, useIsActivating, useAccount, useProvider } = hooks;
 

@@ -1,6 +1,7 @@
 import { toast } from "react-hot-toast";
 import Web3Error from "~/web3/errors/Web3Error";
-import { WEB3_ERROR_CODE } from "~/web3/errors/declarations";
+import { ERROR_CODES_TO_IGNORE } from "./constants";
+import { WEB3_ERROR_CODE } from "./declarations";
 
 export type Web3ErrorHandler = (
   web3Function: () => Promise<void>
@@ -15,6 +16,10 @@ const useWeb3ErrorsHandler = (): UseWeb3ErrorsHandlerResult => {
     try {
       await web3Function();
     } catch (error) {
+      if (error instanceof Web3Error && ERROR_CODES_TO_IGNORE.has(error.code)) {
+        return;
+      }
+
       const errorMessage =
         error instanceof Web3Error
           ? error.code

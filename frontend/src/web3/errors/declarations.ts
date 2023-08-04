@@ -1,4 +1,14 @@
+export enum RAW_METAMASK_ERROR_CODE {
+  ACTION_REJECTED = "ACTION_REJECTED",
+  INSUFFICIENT_FUNDS = "INSUFFICIENT_FUNDS"
+}
+
 export enum WEB3_ERROR_CODE {
-  NO_MONEY = "There is no money",
+  INSUFFICIENT_FUNDS = "Insufficient funds",
+  USER_CANCELLED_OPERATION = "User cancelled operation",
   SOMETHING_WRONG = "Something went wrong"
 }
+
+export type RawMetamaskError = Error & {
+  code: RAW_METAMASK_ERROR_CODE;
+};
