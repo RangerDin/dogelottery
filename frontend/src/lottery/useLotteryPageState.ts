@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  CONNECTED_LOTTERY_PAGE_STATUS,
-  MutableLotteryPageState,
-  MutableLotteryPageTicketPurchaseStatus
-} from "~/lottery/declarations/state";
-import {
-  LotteryTicket,
   LotteryTicketId,
-  LotteryTicketSlot,
-  LotteryTicketStatus
+  LotteryTicketSlot
 } from "~/lottery/declarations/ticket";
 import { hooks, metamask } from "~/web3/connectors/metamask";
 import { buyLotteryTicket } from "~/web3/tickets/buy";
@@ -26,6 +19,8 @@ import { getHue } from "~/web3/tickets/getHue";
 import { SpecificTicketDialogProps } from "~/lottery/components/TicketDialog/declarations";
 import useWeb3ErrorsHandler from "~/web3/errors/useWeb3ErrorsHandler";
 import wrapWeb3Errors from "~/web3/errors/wrapWeb3Errors";
+import useLotteryPageReducer from "~/lottery/useLotteryPageReducer";
+import { LOTTERY_PAGE_ACTION_TYPE } from "~/lottery/useLotteryPageReducer/declarations";
 
 const { useIsActive, useIsActivating, useAccount, useProvider } = hooks;
 
@@ -54,24 +49,10 @@ type UseLotteryPageStateResult = {
 
 const HIDE_DIALOG_DELAY = 300;
 
-const INITIAL_STATE: MutableLotteryPageState = {
-  tickets: [],
-  ticketPreparing: {
-    inProgress: false
-  },
-  connection: {
-    inProgress: false,
-    in: false
-  },
-  ticketPurchase: {
-    inProgress: false
-  }
-};
-
 const useLotteryPageState = (): UseLotteryPageStateResult => {
   const [checkingConnection, setCheckingConnection] = useState(true);
-  const [mutableState, setMutableState] =
-    useState<MutableLotteryPageState>(INITIAL_STATE);
+  const { dispatch, state: mutableState } = useLotteryPageReducer();
+
   const ticketSelectionDialog = useDialog<SpecificTicketSelectorDialogProps>();
   const ticketDialog = useDialog<SpecificTicketDialogProps>();
   const isActive = useIsActive();
@@ -81,10 +62,12 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   const handleWeb3Error = useWeb3ErrorsHandler();
 
   if (address && mutableState.address !== address) {
-    setMutableState(state => ({
-      ...state,
-      address
-    }));
+    dispatch({
+      type: LOTTERY_PAGE_ACTION_TYPE.SET_ADDRESS,
+      payload: {
+        address
+      }
+    });
   }
 
   useEffect(() => {
@@ -93,28 +76,20 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     metamask
       .connectEagerly()
       .then(() => {
-        setMutableState(state => ({
-          ...state,
-          connection: {
-            in: true,
-            inProgress: false
-          }
-        }));
+        dispatch({
+          type: LOTTERY_PAGE_ACTION_TYPE.SET_CONNECTED
+        });
       })
       .catch(() => {
-        setMutableState(state => ({
-          ...state,
-          connection: {
-            in: false,
-            inProgress: false
-          }
-        }));
+        dispatch({
+          type: LOTTERY_PAGE_ACTION_TYPE.SET_DISCONNECTED
+        });
         console.debug("Failed to connect eagerly to metamask");
       })
       .finally(() => {
         setCheckingConnection(false);
       });
-  }, []);
+  }, [dispatch]);
 
   const state: LotteryPageState = useMemo((): LotteryPageState => {
     if (checkingConnection) {
@@ -157,12 +132,9 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   ]);
 
   const prepareNewTickets = async () => {
-    setMutableState(state => ({
-      ...state,
-      ticketPreparing: {
-        inProgress: true
-      }
-    }));
+    dispatch({
+      type: LOTTERY_PAGE_ACTION_TYPE.START_TICKET_PREPARING
+    });
 
     const ticketsToChoose = await generateLotteryTickets(
       LOTTERY_TICKETS_TO_GENERATE
@@ -171,12 +143,9 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     ticketSelectionDialog.openDialog({
       ticketsToChoose
     });
-    setMutableState(state => ({
-      ...state,
-      ticketPreparing: {
-        inProgress: false
-      }
-    }));
+    dispatch({
+      type: LOTTERY_PAGE_ACTION_TYPE.STOP_TICKET_PREPARING
+    });
   };
 
   const selectTicket = (ticketId: LotteryTicketId) => {
@@ -191,36 +160,24 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
         throw new Error("There is no provider");
       }
 
-      setMutableState(state => ({
-        ...state,
-        ticketPurchase: {
-          inProgress: true,
-          status: MutableLotteryPageTicketPurchaseStatus.setAllowance
-        }
-      }));
+      dispatch({
+        type: LOTTERY_PAGE_ACTION_TYPE.START_SETTING_ALLOWANCE
+      });
 
       try {
         const activeTicket = await wrapWeb3Errors(() =>
           buyLotteryTicket(provider, () => {
-            setMutableState(state => ({
-              ...state,
-              ticketPurchase: {
-                inProgress: true,
-                status: MutableLotteryPageTicketPurchaseStatus.ticketPurchasing
-              }
-            }));
+            dispatch({
+              type: LOTTERY_PAGE_ACTION_TYPE.START_TICKET_PURCHASING
+            });
           })
         );
 
-        setMutableState(state => {
-          return {
-            ...state,
-            status: CONNECTED_LOTTERY_PAGE_STATUS.SHOWING_TICKET,
-            tickets: [...state.tickets, activeTicket],
-            ticketPurchase: {
-              inProgress: false
-            }
-          };
+        dispatch({
+          type: LOTTERY_PAGE_ACTION_TYPE.COMPLETE_TICKET_PURCHASING,
+          payload: {
+            ticket: activeTicket
+          }
         });
 
         setTimeout(() => {
@@ -230,12 +187,9 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
           ticketId: activeTicket.id
         });
       } catch (error) {
-        setMutableState(state => ({
-          ...state,
-          ticketPurchase: {
-            inProgress: false
-          }
-        }));
+        dispatch({
+          type: LOTTERY_PAGE_ACTION_TYPE.CANCEL_TICKET_PURCHASING
+        });
         ticketSelectionDialog.dialogProps.onClose();
 
         throw error;
@@ -255,30 +209,12 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
         throw new Error("There is no address");
       }
 
-      setMutableState(state => ({
-        ...state,
-        tickets: state.tickets.map(ticket => {
-          if (ticket.id !== activeTicketId) {
-            return ticket;
-          }
-
-          if (ticket.status === LotteryTicketStatus.NEW) {
-            return {
-              ...ticket,
-              status: LotteryTicketStatus.SENDING_NEW
-            };
-          }
-
-          if (ticket.status === LotteryTicketStatus.OPENED) {
-            return {
-              ...ticket,
-              status: LotteryTicketStatus.SENDING_OPENED
-            };
-          }
-
-          return ticket;
-        })
-      }));
+      dispatch({
+        type: LOTTERY_PAGE_ACTION_TYPE.START_SENDING_TICKET,
+        payload: {
+          ticketId: activeTicketId
+        }
+      });
 
       const currentOwnerAddress = mutableState.address;
 
@@ -292,31 +228,19 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
           })
         );
 
-        setMutableState(state => ({
-          ...state,
-          tickets: state.tickets.filter(({ id }) => id !== activeTicketId)
-        }));
+        dispatch({
+          type: LOTTERY_PAGE_ACTION_TYPE.COMPLETE_SENDING_TICKET,
+          payload: {
+            ticketId: activeTicketId
+          }
+        });
       } catch (error) {
-        setMutableState(state => ({
-          ...state,
-          tickets: state.tickets.map(ticket => {
-            if (ticket.status === LotteryTicketStatus.SENDING_NEW) {
-              return {
-                ...ticket,
-                status: LotteryTicketStatus.NEW
-              };
-            }
-
-            if (ticket.status === LotteryTicketStatus.SENDING_OPENED) {
-              return {
-                ...ticket,
-                status: LotteryTicketStatus.OPENED
-              };
-            }
-
-            return ticket;
-          })
-        }));
+        dispatch({
+          type: LOTTERY_PAGE_ACTION_TYPE.CANCEL_SENDING_TICKET,
+          payload: {
+            ticketId: activeTicketId
+          }
+        });
 
         throw error;
       }
@@ -324,55 +248,33 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
 
   const openTicket = async (
     activeTicketId: LotteryTicketId,
-    openSlot: LotteryTicketSlot
+    openedSlot: LotteryTicketSlot
   ) =>
     handleWeb3Error(async () => {
       if (!provider) {
         throw new Error("There is no provider");
       }
 
-      setMutableState(state => {
-        return {
-          ...state,
-          tickets: state.tickets.map(ticket => {
-            if (ticket.id !== activeTicketId) {
-              return ticket;
-            }
-
-            const openingTicket: LotteryTicket = {
-              ...ticket,
-              status: LotteryTicketStatus.OPENING,
-              openedSlot: openSlot
-            };
-
-            return openingTicket;
-          })
-        };
+      dispatch({
+        type: LOTTERY_PAGE_ACTION_TYPE.START_OPENING_TICKET,
+        payload: {
+          ticketId: activeTicketId,
+          openedSlot
+        }
       });
 
       let winningSlot: LotteryTicketSlot;
 
       try {
         winningSlot = await wrapWeb3Errors(() =>
-          openLotteryTicket(provider, activeTicketId, openSlot)
+          openLotteryTicket(provider, activeTicketId, openedSlot)
         );
       } catch (error) {
-        setMutableState(state => {
-          return {
-            ...state,
-            tickets: state.tickets.map(ticket => {
-              if (ticket.id !== activeTicketId) {
-                return ticket;
-              }
-
-              const openingTicket: LotteryTicket = {
-                id: ticket.id,
-                status: LotteryTicketStatus.NEW
-              };
-
-              return openingTicket;
-            })
-          };
+        dispatch({
+          type: LOTTERY_PAGE_ACTION_TYPE.CANCEL_OPENING_TICKET,
+          payload: {
+            ticketId: activeTicketId
+          }
         });
 
         throw error;
@@ -381,26 +283,14 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
       const ticketHue = await wrapWeb3Errors(() =>
         getHue(provider, activeTicketId)
       );
-
-      setMutableState(state => {
-        return {
-          ...state,
-          tickets: state.tickets.map(ticket => {
-            if (ticket.id !== activeTicketId) {
-              return ticket;
-            }
-
-            const openedTicket: LotteryTicket = {
-              ...ticket,
-              status: LotteryTicketStatus.OPENED,
-              winningSlot,
-              ticketHue,
-              openedSlot: openSlot
-            };
-
-            return openedTicket;
-          })
-        };
+      dispatch({
+        type: LOTTERY_PAGE_ACTION_TYPE.COMPLETE_OPENING_TICKET,
+        payload: {
+          ticketId: activeTicketId,
+          ticketHue,
+          winningSlot,
+          openedSlot
+        }
       });
     });
 
@@ -408,49 +298,30 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
     handleWeb3Error(async () => {
       await wrapWeb3Errors(() => metamask.activate());
 
-      setMutableState(state => ({
-        ...state,
-        connection: {
-          inProgress: true,
-          in: true
-        }
-      }));
+      dispatch({
+        type: LOTTERY_PAGE_ACTION_TYPE.START_CONNECTION
+      });
     });
 
   const onConnected = () => {
-    setMutableState(state => {
-      return {
-        ...state,
-        connection: {
-          inProgress: false,
-          in: true
-        }
-      };
+    dispatch({
+      type: LOTTERY_PAGE_ACTION_TYPE.SET_CONNECTED
     });
   };
 
   const disconnect = async () =>
     handleWeb3Error(async () => {
-      setMutableState(state => ({
-        ...state,
-        connection: {
-          inProgress: true,
-          in: false
-        }
-      }));
+      dispatch({
+        type: LOTTERY_PAGE_ACTION_TYPE.START_DISCONNECTION
+      });
 
       await wrapWeb3Errors(() => metamask.resetState());
     });
 
   const onDisconnected = async () => {
-    setMutableState(state => ({
-      ...state,
-      tickets: [],
-      connection: {
-        inProgress: false,
-        in: false
-      }
-    }));
+    dispatch({
+      type: LOTTERY_PAGE_ACTION_TYPE.SET_DISCONNECTED
+    });
   };
 
   return {
