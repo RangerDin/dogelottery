@@ -93,6 +93,7 @@ const TicketDialog = ({
         />
         <TicketDialogInput
           in={status === TICKET_DIALOG_STATUS.SEND_TICKET}
+          disabled={sending}
           value={address}
           onChange={handleChangeAddress}
         />

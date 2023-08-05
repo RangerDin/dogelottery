@@ -1,7 +1,8 @@
-import { toast } from "react-hot-toast";
 import Web3Error from "~/web3/errors/Web3Error";
 import { ERROR_CODES_TO_IGNORE } from "./constants";
 import { WEB3_ERROR_CODE } from "./declarations";
+import useToast from "~/ui/toasts/useToast";
+import { TOAST_VARIANT } from "~/ui/toasts/declarations";
 
 export type Web3ErrorHandler = (
   web3Function: () => Promise<void>
@@ -9,9 +10,9 @@ export type Web3ErrorHandler = (
 
 type UseWeb3ErrorsHandlerResult = Web3ErrorHandler;
 
-const ERROR_TOAST_COLOR = "#f00";
-
 const useWeb3ErrorsHandler = (): UseWeb3ErrorsHandlerResult => {
+  const { toast } = useToast();
+
   const handleWeb3Error: Web3ErrorHandler = async web3Function => {
     try {
       await web3Function();
@@ -26,9 +27,7 @@ const useWeb3ErrorsHandler = (): UseWeb3ErrorsHandlerResult => {
           : WEB3_ERROR_CODE.SOMETHING_WRONG;
 
       toast(errorMessage, {
-        style: {
-          color: ERROR_TOAST_COLOR
-        }
+        variant: TOAST_VARIANT.ERROR
       });
     }
   };

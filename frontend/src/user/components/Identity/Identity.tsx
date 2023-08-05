@@ -1,28 +1,23 @@
-import { toast } from "react-hot-toast";
 import Logo from "~/user/components/Logo";
 import styles from "./styles.module.css";
 import { copyTextToClipboard } from "~/ui/clipboard/copyTextToClipboard";
 import { CSSProperties, forwardRef } from "react";
+import useToast from "~/ui/toasts/useToast";
 
 type Props = {
   address?: string;
   className?: string;
 };
 
-const COPIED_TOAST_STYLES: CSSProperties = {
-  color: "#fff",
-  background: "#6b6bc4"
-};
-
 const Identity = forwardRef<HTMLDivElement, Props>(
   ({ address, className }: Props, ref): JSX.Element => {
+    const { toast } = useToast();
+
     const handleClickCopyAddress = async () => {
       if (address) {
         await copyTextToClipboard(address);
 
-        toast("Address copied", {
-          style: COPIED_TOAST_STYLES
-        });
+        toast("Address copied");
       }
     };
 

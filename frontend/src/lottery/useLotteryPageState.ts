@@ -21,6 +21,8 @@ import useWeb3ErrorsHandler from "~/web3/errors/useWeb3ErrorsHandler";
 import wrapWeb3Errors from "~/web3/errors/wrapWeb3Errors";
 import useLotteryPageReducer from "~/lottery/useLotteryPageReducer";
 import { LOTTERY_PAGE_ACTION_TYPE } from "~/lottery/useLotteryPageReducer/declarations";
+import useToast from "~/ui/toasts/useToast";
+import { TOAST_VARIANT } from "~/ui/toasts/declarations";
 
 const { useIsActive, useIsActivating, useAccount, useProvider } = hooks;
 
@@ -60,6 +62,7 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
   const address = useAccount();
   const provider = useProvider();
   const handleWeb3Error = useWeb3ErrorsHandler();
+  const { toast } = useToast();
 
   if (address && mutableState.address !== address) {
     dispatch({
@@ -233,6 +236,10 @@ const useLotteryPageState = (): UseLotteryPageStateResult => {
           payload: {
             ticketId: activeTicketId
           }
+        });
+
+        toast("Ticket was sent successfully", {
+          variant: TOAST_VARIANT.DEFAULT
         });
       } catch (error) {
         dispatch({
