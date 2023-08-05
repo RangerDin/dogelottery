@@ -41,3 +41,25 @@
   flex: 1;
   max-width: 300px;
 }
+
+.leftHeaderBar {
+  margin-left: auto;
+  display: flex;
+  gap: 24px;
+}
+
+@media screen and (max-width: 600px) {
+  .identity {
+      flex-direction: column;
+      gap: 12px;
+  }
+
+  .leftHeaderBar {
+    margin-left: 0;
+  }
+
+  .leftHeaderBar > * {
+    flex: 1;
+    max-width: unset;
+  }
+}

@@ -7,6 +7,6 @@ export const TOAST_STYLE_BY_VARIANT: Record<TOAST_VARIANT, CSSProperties> = {
     background: "#6b6bc4"
   },
   [TOAST_VARIANT.ERROR]: {
-    color: "f00"
+    color: "#f00"
   }
 };

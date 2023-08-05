@@ -6,6 +6,7 @@ import useLotteryPageState from "~/lottery/useLotteryPageState";
 import TicketDialog from "~/lottery/components/TicketDialog";
 import { LOTTERY_PAGE_CONNECTION_STATUS } from "~/lottery/declarations/page";
 import Fade from "~/ui/animation/Fade";
+import RequestTokensButton from "~/web3/components/RequestTokensButton/RequestTokensButton";
 
 export const Home = () => {
   const { state, handlers } = useLotteryPageState();
@@ -25,22 +26,30 @@ export const Home = () => {
             <Identity address={state.address} />
           </Fade>
         )}
-        {state.connectionStatus !==
-          LOTTERY_PAGE_CONNECTION_STATUS.CHECKING_CONNECTION && (
-          <ConnectButton
-            connected={
-              state.connectionStatus ===
-                LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED ||
-              state.connectionStatus ===
+        <div className={styles.leftHeaderBar}>
+          {state.connectionStatus ===
+            LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED && (
+            <Fade in={state.connection.in} mountOnEnter unmountOnExit>
+              <RequestTokensButton />
+            </Fade>
+          )}
+          {state.connectionStatus !==
+            LOTTERY_PAGE_CONNECTION_STATUS.CHECKING_CONNECTION && (
+            <ConnectButton
+              connected={
+                state.connectionStatus ===
+                  LOTTERY_PAGE_CONNECTION_STATUS.CONNECTED ||
+                state.connectionStatus ===
+                  LOTTERY_PAGE_CONNECTION_STATUS.CONNECTING
+              }
+              disabled={
+                state.connectionStatus ===
                 LOTTERY_PAGE_CONNECTION_STATUS.CONNECTING
-            }
-            disabled={
-              state.connectionStatus ===
-              LOTTERY_PAGE_CONNECTION_STATUS.CONNECTING
-            }
-            handlers={handlers}
-          />
-        )}
+              }
+              handlers={handlers}
+            />
+          )}
+        </div>
       </div>
       <div className={styles.mainContent}>
         <Kiosk className={styles.kiosk} state={state} handlers={handlers} />

@@ -34,6 +34,7 @@ const KioskConnected = ({ state, handlers }: Props): JSX.Element => {
           }
           mountOnEnter
           unmountOnExit
+          withAbsolutePosition
         >
           <KioskBuyTicketButton
             disabled={

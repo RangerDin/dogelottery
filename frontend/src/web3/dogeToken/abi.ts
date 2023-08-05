@@ -1,6 +1,12 @@
 export const DOGE_TOKEN_CONTRACT_ABI = [
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "requestAmount",
+        type: "uint256"
+      }
+    ],
     stateMutability: "nonpayable",
     type: "constructor"
   },
@@ -122,37 +128,6 @@ export const DOGE_TOKEN_CONTRACT_ABI = [
     type: "function"
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256"
-      }
-    ],
-    name: "burn",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "account",
-        type: "address"
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256"
-      }
-    ],
-    name: "burnFrom",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  {
     inputs: [],
     name: "decimals",
     outputs: [
@@ -190,6 +165,19 @@ export const DOGE_TOKEN_CONTRACT_ABI = [
     type: "function"
   },
   {
+    inputs: [],
+    name: "getRequestAmount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
     inputs: [
       {
         internalType: "address",
@@ -224,6 +212,13 @@ export const DOGE_TOKEN_CONTRACT_ABI = [
       }
     ],
     stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "requestTokens",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function"
   },
   {

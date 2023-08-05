@@ -8,8 +8,11 @@
 
 .appear.appearActive {
   opacity: 1;
-  position: absolute;
   transition: opacity 300ms;
+}
+
+.appear.appearActive.withAbsolutePosition {
+  position: absolute;
 }
 
 .appearDone {
@@ -22,8 +25,11 @@
 
 .exit.exitActive {
   opacity: 0;
-  position: absolute;
   transition: opacity 300ms;
+}
+
+.exit.exitActive.withAbsolutePosition {
+  position: absolute;
 }
 
 .exitDone {

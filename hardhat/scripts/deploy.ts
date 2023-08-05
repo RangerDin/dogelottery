@@ -4,10 +4,11 @@ import { BigNumberish, BytesLike } from "ethers";
 type DogeLotteryOptions = {
   subscriptionId: BigNumberish;
   vrfCoordinatorAddress: string;
-  dogeTokenAddress: string;
   vrfGasLaneHash: BytesLike;
   newTicketPrice: BigNumberish;
   baseURL: string;
+  dogeTokenAddress: string;
+  dogeTokenRequestAmount: BigNumberish;
 };
 
 const TEST_CHAIN_ID = 31337;
@@ -15,20 +16,21 @@ const TEST_CHAIN_ID = 31337;
 const OPTIONS_BY_CHAIN_ID: Record<number, DogeLotteryOptions> = {
   [TEST_CHAIN_ID]: {
     baseURL: "https://doge.lottery/ticket/",
-    newTicketPrice: 1_000_000_000_000_000_000n,
+    newTicketPrice: 1_000_000_000_000n,
     subscriptionId: "",
     vrfGasLaneHash: ethers.utils.formatBytes32String("0x00000012"),
     vrfCoordinatorAddress: "",
-    dogeTokenAddress: ""
+    dogeTokenAddress: "",
+    dogeTokenRequestAmount : 1_000_000_000_000_000n
   },
   80001: {
     baseURL: "https://doge.lottery/ticket/",
-    newTicketPrice: 1_000_000_000_000_000_000n,
-    /* TODO: add subscription id */
+    newTicketPrice: 1_000_000_000_000n,
     subscriptionId: "",
     vrfGasLaneHash: "",
     vrfCoordinatorAddress: "",
-    dogeTokenAddress: ""
+    dogeTokenAddress: "",
+    dogeTokenRequestAmount : 1_000_000_000_000_000n
   },
 };
 
@@ -69,9 +71,10 @@ async function main() {
     vrfCoordinatorAddress = vrfCoordinator.address;
 
     const dogeTokenFactory = await ethers.getContractFactory(
-      "DogeTokenMock"
+      "TestDogeToken"
     );
-    const dogeToken = await dogeTokenFactory.deploy();
+
+    const dogeToken = await dogeTokenFactory.deploy(options.dogeTokenRequestAmount);
 
     dogeTokenAddress = dogeToken.address;
   } else {
@@ -86,7 +89,7 @@ async function main() {
     vrfCoordinatorAddress,
     dogeTokenAddress,
     options.vrfGasLaneHash,
-    100n,
+    options.newTicketPrice,
     options.baseURL
   );
 

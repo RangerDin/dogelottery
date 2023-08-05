@@ -17,11 +17,11 @@ export const buyLotteryTicket = async (
 
   await switchEthereumChain(provider);
 
-  const docketTokenContract = DogeTokenContract.connect(signer);
+  const dogeTokenContract = DogeTokenContract.connect(signer);
 
   const ticketPrice = await lotteryContract.getNewTicketPrice();
 
-  const tx = await docketTokenContract.approve(
+  const tx = await dogeTokenContract.approve(
     lotteryContract.address,
     ticketPrice
   );

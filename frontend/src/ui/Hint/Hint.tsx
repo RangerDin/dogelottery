@@ -13,7 +13,7 @@ const Hint = ({
   className
 }: Props): JSX.Element => {
   return (
-    <Fade in={transitionIn} mountOnEnter unmountOnExit>
+    <Fade in={transitionIn} mountOnEnter unmountOnExit withAbsolutePosition>
       <div className={`${styles.hint} ${className}`}>{children}</div>
     </Fade>
   );

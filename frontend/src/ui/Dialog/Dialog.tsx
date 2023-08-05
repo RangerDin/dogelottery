@@ -63,6 +63,7 @@ const Dialog = ({
       onExited={handleExited}
       mountOnEnter
       unmountOnExit
+      withAbsolutePosition
     >
       <div className={styles.dialog} onClick={handleClickBackdrop}>
         <button className={styles.dialogCloseButton} />

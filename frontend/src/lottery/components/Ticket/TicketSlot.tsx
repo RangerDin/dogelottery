@@ -30,7 +30,12 @@ const TicketSlot = ({
       disabled={disabled}
       onClick={onClick}
     >
-      <Fade in={opened && winning} mountOnEnter unmountOnExit>
+      <Fade
+        in={opened && winning}
+        mountOnEnter
+        unmountOnExit
+        withAbsolutePosition
+      >
         <TicketWinningSlot />
       </Fade>
     </button>

@@ -10,6 +10,7 @@ type Props = {
     className?: string;
   }>;
   timeout?: number;
+  withAbsolutePosition?: boolean;
   mountOnEnter?: boolean;
   unmountOnExit?: boolean;
   onEntered?: () => void;
@@ -49,7 +50,9 @@ const Fade = (props: Props): JSX.Element => {
 
         return cloneElement(props.children, {
           ...childProps,
-          className: `${props.children.props?.className} ${styles.fade}`
+          className: `${props.children.props?.className} ${styles.fade} ${
+            props.withAbsolutePosition && styles.withAbsolutePosition
+          }`
         });
       }}
     </CSSTransition>
