@@ -1,38 +1,7 @@
 import { ethers, network } from "hardhat";
-import { BigNumberish, BytesLike } from "ethers";
-
-type DogeLotteryOptions = {
-  subscriptionId: BigNumberish;
-  vrfCoordinatorAddress: string;
-  vrfGasLaneHash: BytesLike;
-  newTicketPrice: BigNumberish;
-  baseURL: string;
-  dogeTokenAddress: string;
-  dogeTokenRequestAmount: BigNumberish;
-};
-
-const TEST_CHAIN_ID = 31337;
-
-const OPTIONS_BY_CHAIN_ID: Record<number, DogeLotteryOptions> = {
-  [TEST_CHAIN_ID]: {
-    baseURL: "https://doge.lottery/ticket/",
-    newTicketPrice: 1_000_000_000_000n,
-    subscriptionId: "",
-    vrfGasLaneHash: ethers.utils.formatBytes32String("0x00000012"),
-    vrfCoordinatorAddress: "",
-    dogeTokenAddress: "",
-    dogeTokenRequestAmount : 1_000_000_000_000_000n
-  },
-  80001: {
-    baseURL: "https://doge.lottery/ticket/",
-    newTicketPrice: 1_000_000_000_000n,
-    subscriptionId: "",
-    vrfGasLaneHash: "",
-    vrfCoordinatorAddress: "",
-    dogeTokenAddress: "",
-    dogeTokenRequestAmount : 1_000_000_000_000_000n
-  },
-};
+import { BigNumberish } from "ethers";
+import { OPTIONS_BY_CHAIN_ID, } from "./constants";
+import { TEST_CHAIN_ID } from "../constants/networks";
 
 async function main() {
   const chainId = network.config.chainId;
@@ -50,8 +19,8 @@ async function main() {
   let subscriptionId: BigNumberish;
   let vrfCoordinatorAddress: string;
   let dogeTokenAddress: string;
-
   let vrfCoordinator;
+
   if (chainId === TEST_CHAIN_ID) {
     const vrfCoordinatorFactory = await ethers.getContractFactory(
       "VRFCoordinatorV2Mock"
@@ -104,7 +73,7 @@ async function main() {
   console.log(
     `
       DogeLottery contract was deployed to ${dogeLottery.address}. (Owner: ${lotteryOwnerAddress})\n
-      DogeToken was deployed: ${dogeTokenAddress}\n
+      TestDogeToken was deployed: ${dogeTokenAddress}\n
       VRF coordinator address: ${vrfCoordinatorAddress}
     `
   );

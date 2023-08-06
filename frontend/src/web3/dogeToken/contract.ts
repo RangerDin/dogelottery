@@ -1,8 +1,11 @@
 import { Contract } from "@ethersproject/contracts";
 import { DOGE_TOKEN_CONTRACT_ABI } from "./abi";
+import { getEnvOrThrowError } from "~/utils/envs";
 
-const DOGE_TOKEN_CONTRACT_ADDRESS =
-  "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
+const DOGE_TOKEN_CONTRACT_ADDRESS = getEnvOrThrowError(
+  process.env.NEXT_PUBLIC_DOGE_TOKEN_CONTRACT_ADDRESS,
+  "NEXT_PUBLIC_DOGE_TOKEN_CONTRACT_ADDRESS"
+);
 
 export const DogeTokenContract = new Contract(
   DOGE_TOKEN_CONTRACT_ADDRESS,

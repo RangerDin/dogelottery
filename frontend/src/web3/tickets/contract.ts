@@ -1,7 +1,11 @@
 import { Contract } from "@ethersproject/contracts";
+import { getEnvOrThrowError } from "~/utils/envs";
 import { LOTTERY_CONTRACT_ABI } from "~/web3/tickets/abi";
 
-const LOTTERY_CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
+const LOTTERY_CONTRACT_ADDRESS = getEnvOrThrowError(
+  process.env.NEXT_PUBLIC_LOTTERY_CONTRACT_ADDRESS,
+  "NEXT_PUBLIC_LOTTERY_CONTRACT_ADDRESS"
+);
 
 export const LotteryContract = new Contract(
   LOTTERY_CONTRACT_ADDRESS,
