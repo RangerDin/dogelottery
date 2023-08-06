@@ -1,7 +1,7 @@
 import type * as ethers from "ethers";
-import { DogeLottery, DogeTokenMock } from "../../typechain-types";
+import { DogeLottery, TestDogeToken } from "../../typechain-types";
 
-export const buyTicket = async (lottery: DogeLottery, token: DogeTokenMock, buyer: ethers.Signer): Promise<number> => {
+export const buyTicket = async (lottery: DogeLottery, token: TestDogeToken, buyer: ethers.Signer): Promise<number> => {
   const newTicketPrice = await lottery.getNewTicketPrice();
 
   await token.transfer(buyer.getAddress(), newTicketPrice);

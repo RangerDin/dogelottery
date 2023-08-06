@@ -34,10 +34,11 @@ describe("DogeLottery", function () {
       subscriptionReserve
     );
 
-    const dogeTokenMockFactory = await ethers.getContractFactory(
-      "DogeTokenMock"
+    const testDogeTokenFactory = await ethers.getContractFactory(
+      "TestDogeToken"
     );
-    const dogeToken = await dogeTokenMockFactory.deploy();
+    const tokenAmountToReceiveTickets = TICKET_PRICE * 100n;
+    const dogeToken = await testDogeTokenFactory.deploy(tokenAmountToReceiveTickets);
 
     const dogeLottery = await DogeLotteryFactory.deploy(
       subscriptionId,
@@ -50,6 +51,7 @@ describe("DogeLottery", function () {
 
     await vrfCoordinatorMock.addConsumer(subscriptionId, dogeLottery.address);
 
+    await dogeToken.requestTokens();
     await dogeToken.transfer(dogeLottery.address, RESERVE);
 
     return {
