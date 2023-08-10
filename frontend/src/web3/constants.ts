@@ -1,7 +1,19 @@
-export const DEFAULT_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID;
+import { getEnvOrThrowError } from "~/utils/envs";
+import { ChainOptions } from "~/web3/declarations";
 
-if (!DEFAULT_CHAIN_ID) {
-  throw new Error(
-    "You should provide NEXT_PUBLIC_CHAIN_ID env to launch the app"
+const getDefaultChainOptions = (): ChainOptions => {
+  const rawEnvData = getEnvOrThrowError(
+    process.env.NEXT_PUBLIC_CHAIN,
+    "NEXT_PUBLIC_CHAIN"
   );
-}
+
+  try {
+    const chainOptions = JSON.parse(rawEnvData);
+
+    return chainOptions;
+  } catch (error) {
+    throw new Error("Incorrect format of NEXT_PUBLIC_CHAIN env variable");
+  }
+};
+
+export const DEFAULT_CHAIN_OPTIONS = getDefaultChainOptions();
