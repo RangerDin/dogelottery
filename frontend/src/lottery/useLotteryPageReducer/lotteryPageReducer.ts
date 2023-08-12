@@ -169,16 +169,20 @@ const ACTION_REDUCERS = {
   ) => ({
     ...previousState,
     tickets: previousState.tickets.map(ticket => {
-      if (ticket.status === LotteryTicketStatus.SENDING_NEW &&
-        ticket.id === action.payload.ticketId) {
+      if (
+        ticket.status === LotteryTicketStatus.SENDING_NEW &&
+        ticket.id === action.payload.ticketId
+      ) {
         return {
           ...ticket,
           status: LotteryTicketStatus.NEW
         };
       }
 
-      if (ticket.status === LotteryTicketStatus.SENDING_OPENED &&
-        ticket.id === action.payload.ticketId) {
+      if (
+        ticket.status === LotteryTicketStatus.SENDING_OPENED &&
+        ticket.id === action.payload.ticketId
+      ) {
         return {
           ...ticket,
           status: LotteryTicketStatus.OPENED
@@ -249,7 +253,8 @@ const ACTION_REDUCERS = {
 };
 // @ts-ignore simplify getting a reducer
 export const lotteryPageReducer: Reducer<
-  MutableLotteryPageState, LotteryPageAction
+  MutableLotteryPageState,
+  LotteryPageAction
 > = (previousState, action) => {
   // @ts-ignore simplify getting a reducer
   const actionHandler = ACTION_REDUCERS[action.type];
