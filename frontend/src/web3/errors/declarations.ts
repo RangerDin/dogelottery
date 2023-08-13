@@ -4,6 +4,7 @@ export enum RAW_METAMASK_ERROR_CODE {
 }
 
 export enum WEB3_ERROR_CODE {
+  METAMASK_IS_NOT_INSTALLED = "Metamask is not installed",
   INSUFFICIENT_FUNDS = "Insufficient funds",
   USER_CANCELLED_OPERATION = "User cancelled operation",
   SOMETHING_WRONG = "Something went wrong",

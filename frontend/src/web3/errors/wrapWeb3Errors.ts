@@ -6,6 +6,7 @@ import {
 import { WEB3_ERROR_CODE } from "./declarations";
 import isRawMetamaskError from "./isRawMetamaskError";
 import isRawMetamaskNestedError from "~/web3/errors/isRawMetamaskNestedError";
+import { NoMetaMaskError } from "@web3-react/metamask";
 
 const wrapWeb3Errors = async <T>(web3Function: () => T): Promise<T> => {
   try {
@@ -24,6 +25,10 @@ const wrapWeb3Errors = async <T>(web3Function: () => T): Promise<T> => {
 export default wrapWeb3Errors;
 
 const getCodeByError = (error: unknown): WEB3_ERROR_CODE | undefined => {
+  if (error instanceof NoMetaMaskError) {
+    return WEB3_ERROR_CODE.METAMASK_IS_NOT_INSTALLED;
+  }
+
   if (isRawMetamaskNestedError(error)) {
     const errorCodeByMessage =
       ERROR_CODES_BY_MESSAGE[error.error?.data?.message ?? ""];
